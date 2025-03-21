@@ -13,6 +13,7 @@ import commands
 import custom.c_commands
 from paths import FilePaths
 import query
+import sheets
 
 def main() -> None:
     """Opens the command line user interface."""
@@ -20,6 +21,7 @@ def main() -> None:
         names_json = json.load(f)
     FilePaths.wb_name = names_json["wb_name"]
     FilePaths.update_filepaths()
+    sheets.update_sheets()
     query.update_query_variables()
 
     # these constants must be located here in order to initialize their f-string values before first print.
@@ -53,7 +55,7 @@ def main() -> None:
         
         "custom => custom commands. These are meant for user-specific query+workbook combos and should be "
             "manually implemented.\n\t"+
-            "Your current setup is unlikely to support these.")
+            "Using them without correct query and workbook structure will likely crash this program.")
     _HELP_MESSAGE = (">>>Quick guide on how to run this<<<\n"
                     "1. type 'update query' and update these settings to your own liking.\n"
                     "2. Create a new workbook by typing 'CREATE NEW WB': type 'basic' as your workbook type.\n"
@@ -117,6 +119,7 @@ if __name__ == '__main__':
             names_json = json.load(f)
         FilePaths.wb_name = names_json["wb_name"]
         FilePaths.update_filepaths()
+        sheets.update_sheets()
         query.update_query_variables()
         commands.fetch()
         commands.saveall()

@@ -1,9 +1,8 @@
-"""All UI commands."""
+"""CLI commands."""
 
 import json
 import os
 import shutil
-import time
 
 import requests
 
@@ -11,6 +10,7 @@ import commands_utils
 from paths import FilePaths
 import query
 from query import QueryVars, FetchData
+import sheets
 import workbook_tools
 
 def update_query() -> None:
@@ -53,13 +53,12 @@ def update_query() -> None:
           'the rest\n\n'
           
           '/////////////////////////////\n'
-          'Edit query settings. Type one of the following commands:\n'
+          'Edit workbook settings. Type one of the following commands, or type \'back\' to return to main ui.\n'
           'query => current query; must be in JSON format. NOTE THAT ORDER IN \'columns\' MATTERS.\n'
           'market => markets where query data is searched in - either a country/region name or \'global\' if '
           'multiple.\n'
           'headers => custom header values, useful if you want to save data in excel; must be in JSON format.\n'
-          '...or type \'back\' to return to main ui.\n'
-            )
+          '...or type \'back\' to return to main ui.\n')
     while True:
         user_input = input('[update query]-> ')
         if user_input == 'back':
@@ -95,6 +94,7 @@ def update_query() -> None:
                 settings['market'] = new_market
                 with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
+                print(f"Market set as '{new_market}'.")
                 
         elif user_input == 'headers':
             os.system(FilePaths.SETTINGS_PATH+'\\headers.txt')
@@ -215,8 +215,8 @@ def update_to_nums() -> None:
     """
     verify = input('[update floats]-> This process can possible override important data - make sure you have copied'
                    'your current workbook.\n'
-                   'To proceed, type "Yes".\n =>')
-    if verify == 'Yes':
+                   'To proceed, type "yes".\n =>')
+    if verify.lower() == 'yes':
         workbook_tools.update_values_to_nums()
     else:
         print('Updating halted.')
@@ -240,6 +240,7 @@ def show_txt() -> None:
 def show_xlsx() -> None:
     """Opens the main xlsx file."""
     os.system(FilePaths.wb_path)
+    sheets.update_sheets()
 
 def copy() -> None:
     """Makes a hard copy of the current xlsx workbook file."""
@@ -255,8 +256,4 @@ def copy() -> None:
 
 def create() -> None:
     """Creates a new xlsx workbook file template, *replacing the previous one*."""
-    #wb_type = input('Enter a workbook type or write anything else to exit.\n'+
-    #                'basic = only columns from MY_QUERY are included.\n'+
-    #                'custom = MY_QUERY + custom columns, custom sheets.\n=>')
-    #if wb_type in {'basic', 'custom'}:
-    workbook_tools.create_wb('basic')
+    workbook_tools.create_wb()

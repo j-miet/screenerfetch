@@ -1,12 +1,15 @@
 """Workbook tools for current custom workbook."""
 
 import datetime
+import json
 
 import openpyxl
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, Font, NamedStyle
 
-from workbook_tools import WorkSheets, get_last_row
 from paths import FilePaths
+from query import QueryVars
+import sheets
+from workbook_tools import get_last_row
 
 def add_row_in_sheet2(input_str: str) -> None:
     """Add a custom row for a symbol in the second worksheet.
@@ -19,7 +22,7 @@ def add_row_in_sheet2(input_str: str) -> None:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET1]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
     if ws is not None:
         symbol, date = input_str.split()
         raw_date = date.split('-')
@@ -28,8 +31,8 @@ def add_row_in_sheet2(input_str: str) -> None:
         for sym in ws['B']:
             if sym.value == symbol:
                 if ws.cell(row=sym.row, column=1).value.date() == date_datetime.date(): # type: ignore              
-                    ws = wb[WorkSheets.SHEET2]
-                    next_row = get_last_row(WorkSheets.SHEET2)+1
+                    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
+                    next_row = get_last_row(sheets.WorkbookSheetNames.sheet_names[1])+1
                     ws.cell(column=1, row=next_row).value = date_datetime.date()
                     current = ws.cell(column=1, row=next_row)
                     current.alignment = Alignment(horizontal='left')
@@ -38,7 +41,7 @@ def add_row_in_sheet2(input_str: str) -> None:
                     current.alignment = Alignment(horizontal='right')
 
                     wb.save(FilePaths.wb_path)
-                    print(f'Row for {symbol, date} added to sheet {WorkSheets.SHEET2}.')
+                    print(f'Row for {symbol, date} added to sheet {sheets.WorkbookSheetNames.sheet_names[1]}.')
                     return
     print('Failed to find cells corresponding to input data.')
 
@@ -53,7 +56,7 @@ def edit_notes(input_str: str) -> None:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET2]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
     if ws is not None:
         symbol, date = input_str.split()
         raw_date = date.split('-')
@@ -66,7 +69,7 @@ def edit_notes(input_str: str) -> None:
                     ws.cell(row=sym.row, column=3, value=notes) # remember to update column if location changes.
                     ws.cell(row=sym.row, column=3, value=notes).alignment = Alignment(horizontal='right')
                     wb.save(FilePaths.wb_path)
-                    print(f'Notes for {symbol, date} updated in sheet {WorkSheets.SHEET2}.')
+                    print(f'Notes for {symbol, date} updated in sheet {sheets.WorkbookSheetNames.sheet_names[1]}.')
                     return
     print('Failed to find cells corresponding to input data.')
 
@@ -81,7 +84,7 @@ def add_image_hyperlinks(input_str: str) -> None:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET2]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
     if ws is not None:
         symbol, date = input_str.split()
         raw_date = date.split('-')
@@ -104,3 +107,59 @@ def add_image_hyperlinks(input_str: str) -> None:
                     return
     print('Failed to find cells corresponding to input data.')
     return
+
+def custom_update_datetime() -> None:
+    """Update datetime on second sheet."""
+    wb = openpyxl.load_workbook(FilePaths.wb_path)
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
+    if ws is not None:
+        for i in range(2, get_last_row(sheets.WorkbookSheetNames.sheet_names[1])+1):
+            ws.cell(row=i, column=1).style = "datetime"
+            ws.cell(row=i, column=1).alignment = Alignment(horizontal='left')          
+            wb.save(FilePaths.wb_path)
+            print('Date format updated.')
+
+def create_custom_wb() -> None:
+    """Create custom workbook. Will override currently existing wb with same name."""
+    wb = openpyxl.Workbook()
+    ws_data = wb.active
+    if ws_data is not None:
+        ws_data.title = "sheet1"
+        header_font = Font(name='Times New Roman', size=12, bold=True)
+        for h in QueryVars.col_headers:
+            ws_data[h] = QueryVars.col_headers[h]
+            ws_data[h].font = header_font
+        for i in range(3, len(QueryVars.col_headers)+1):
+            current = ws_data.cell(column=i, row=1)
+            current.alignment = Alignment(horizontal='right')
+        ws_data['A2'].style = NamedStyle(name="datetime", number_format='YYYY/MM/DD', 
+                                            alignment=Alignment(horizontal='left'))
+        ws_data.freeze_panes = 'A2'
+
+        col_headers_sheet2= {
+            'A1' : 'Date',
+            'B1' : 'Symbol',
+            'C1' : 'Notes',
+            'D1' : 'Intraday',
+            'E1' : 'Daily'
+        }        
+        wb.create_sheet("sheet2")
+        ws_data = wb["sheet2"]
+        for h in col_headers_sheet2:
+            ws_data[h] = col_headers_sheet2[h]
+            ws_data[h].font = header_font
+        for i in range(2, len(col_headers_sheet2)+1):
+            current = ws_data.cell(column=i, row=1)
+            current.alignment = Alignment(horizontal='right')
+        ws_data.freeze_panes = 'A2'
+        wb.save(FilePaths.wb_path)
+
+        with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+            settings = json.load(f)
+            settings['status'] = 'custom'
+        with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
+            json.dump(settings, f, indent=4)
+
+        print(f"New custom workbook '{FilePaths.wb_name}' created.")
+        sheets.update_sheets()
+        return

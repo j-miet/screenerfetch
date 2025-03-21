@@ -1,12 +1,8 @@
-"""Functions for excel workbook data manipulation.
-
-Most functions are utilized by all workbooks i.e. those with 'basic' type. The following ones, however, are build only for a specific query and should only be used for current 'custom' type workbooks:
-
-add_row_in_sheet2, edit_notes, add_image_hyperlinks.
-"""
+"""Functions for excel workbook data manipulation."""
 
 import copy
 import datetime
+import json
 
 import openpyxl
 from openpyxl.styles import Font, Alignment, NamedStyle
@@ -14,12 +10,7 @@ import pandas as pd
 
 from paths import FilePaths
 from query import QueryVars
-
-class WorkSheets:
-    """Workbook sheet names."""
-    SHEET1 = 'Data'
-    SHEET2 = 'Data2'
-
+import sheets
 
 def get_last_row(sheet_name: str) -> int:
     """Returns the last non-empty row index of main worksheet.
@@ -49,7 +40,7 @@ def check_date(date_str: str) -> bool:
         A boolean.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET1]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
     for date in ws['A']:
         if date_str == str(date.value).replace(' 00:00:00', ''):
             return True
@@ -74,10 +65,10 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
     AUTO_UPDATE_NUMS = True
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET1]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
     if ws is not None:
         d, m, y = date_str.split('/')
-        starting_row = get_last_row(WorkSheets.SHEET1)+1
+        starting_row = get_last_row(sheets.WorkbookSheetNames.sheet_names[0])+1
         next_row = starting_row
         full_data = copy.deepcopy(symbol_data)
         for row in full_data:
@@ -116,9 +107,9 @@ def update_values_to_nums(start_row: int = 2) -> None:
     xlsx_float_columns = QueryVars.sheet_xlsx_float_cols
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET1]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
     if ws is not None:
-        for r in range(start_row, get_last_row(WorkSheets.SHEET1)+1):
+        for r in range(start_row, get_last_row(sheets.WorkbookSheetNames.sheet_names[0])+1):
             for f_col in range(len(float_columns)):
                 try:
                     ws[float_columns[f_col][0]+str(r)] = (
@@ -152,18 +143,12 @@ def update_datetime(first_row: int) -> None:
         first_row: Row number where updating begins. Is always >= 2 as row 1 points to headers.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[WorkSheets.SHEET1]
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
     if ws is not None:
         if isinstance(first_row, int) and first_row >= 2:
-            for i in range(first_row, get_last_row(WorkSheets.SHEET1)+1):
+            for i in range(first_row, get_last_row(sheets.WorkbookSheetNames.sheet_names[0])+1):
                 ws.cell(row=i, column=1).style = "datetime"
-                ws.cell(row=i, column=1).alignment = Alignment(horizontal='left')
-
-            ws = wb[WorkSheets.SHEET2]
-            for i in range(2, get_last_row(WorkSheets.SHEET2)+1):
-                ws.cell(row=i, column=1).style = "datetime"
-                ws.cell(row=i, column=1).alignment = Alignment(horizontal='left')
-            
+                ws.cell(row=i, column=1).alignment = Alignment(horizontal='left')            
             wb.save(FilePaths.wb_path)
             print('Date format updated.')
             return
@@ -175,7 +160,7 @@ def export_wb(type: str) -> None:
     Args:
         type: File format - 'txt', 'csv' or 'json'.
     """
-    df = pd.read_excel(FilePaths.wb_path, WorkSheets.SHEET1)
+    df = pd.read_excel(FilePaths.wb_path, sheets.WorkbookSheetNames.sheet_names[0])
     if type == 'txt': 
         df.to_csv(FilePaths.DATA_PATH+'\\'+FilePaths.wb_name+'.txt', sep='\t', index=False)
     elif type == 'csv':
@@ -187,66 +172,37 @@ def export_wb(type: str) -> None:
         return
     print(f'{FilePaths.wb_name}.'+type+' created.')
 
-def create_wb(wb_type: str) -> None:
-    """Creates a new workbook main file and names the worksheet with WorkSheets.SHEET1 variable value.
+def create_wb() -> None:
+    """Creates a new workbook main file and names the worksheet with sheets.WorkbookSheetNames.sheet_names[0] value.
     
     Calling this function will override the existing workbook file.
 
     Args:
         wb_type: Either 'basic' for data-only workbook, or 'custom' for user-customized workbook template.
     """    
-    if wb_type == 'basic':
-        wb = openpyxl.Workbook()
-        ws_data = wb.active
-        if ws_data is not None:
-            ws_data.title = WorkSheets.SHEET1
-            header_font = Font(name='Times New Roman', size=12, bold=True)
-            for h in QueryVars.col_headers:
-                ws_data[h] = QueryVars.col_headers[h]
-                ws_data[h].font = header_font
-            for i in range(2, len(QueryVars.col_headers)+1):
-                current = ws_data.cell(column=i, row=1)
-                current.alignment = Alignment(horizontal='right')
-            # before a style can be used, it has to be allocated to any cell. After this, any future cells can simply 
-            # copy the style by using its name attribute "datetime".
-            ws_data['A2'].style = NamedStyle(name="datetime", number_format='YYYY/MM/DD')
-            ws_data.freeze_panes = 'A2'
-            wb.save(FilePaths.wb_path)
-            print(f"New workbook '{FilePaths.wb_name}' created with type 'basic'.")
-            return
+    wb = openpyxl.Workbook()
+    ws_data = wb.active
+    if ws_data is not None:
+        ws_data.title = "sheet1"
+        header_font = Font(name='Times New Roman', size=12, bold=True)
+        for h in QueryVars.col_headers:
+            ws_data[h] = QueryVars.col_headers[h]
+            ws_data[h].font = header_font
+        for i in range(2, len(QueryVars.col_headers)+1):
+            current = ws_data.cell(column=i, row=1)
+            current.alignment = Alignment(horizontal='right')
+        # before a style can be used, it has to be allocated to any cell. After this, any future cells can simply 
+        # copy the style by using its name attribute "datetime".
+        ws_data['A2'].style = NamedStyle(name="datetime", number_format='YYYY/MM/DD')
+        ws_data.freeze_panes = 'A2'
+        wb.save(FilePaths.wb_path)
 
-    elif wb_type == 'custom':
-        wb = openpyxl.Workbook()
-        ws_data = wb.active
-        if ws_data is not None:
-            ws_data.title = WorkSheets.SHEET1
-            header_font = Font(name='Times New Roman', size=12, bold=True)
-            for h in QueryVars.col_headers:
-                ws_data[h] = QueryVars.col_headers[h]
-                ws_data[h].font = header_font
-            for i in range(2, len(QueryVars.col_headers)+1):
-                current = ws_data.cell(column=i, row=1)
-                current.alignment = Alignment(horizontal='right')
-            ws_data['A2'].style = NamedStyle(name="datetime", number_format='YYYY/MM/DD', 
-                                             alignment=Alignment(horizontal='left'))
-            ws_data.freeze_panes = 'A2'
+        with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+            settings = json.load(f)
+            settings['status'] = 'basic'
+        with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
+            json.dump(settings, f, indent=4)
 
-            col_headers_sheet2= {
-                'A1' : 'Date',
-                'B1' : 'Symbol',
-                'C1' : 'Notes',
-                'D1' : 'Intraday',
-                'E1' : 'Daily'
-            }        
-            wb.create_sheet(WorkSheets.SHEET2)
-            ws_data = wb[WorkSheets.SHEET2]
-            for h in col_headers_sheet2:
-                ws_data[h] = col_headers_sheet2[h]
-                ws_data[h].font = header_font
-            for i in range(2, len(col_headers_sheet2)+1):
-                current = ws_data.cell(column=i, row=1)
-                current.alignment = Alignment(horizontal='right')
-            ws_data.freeze_panes = 'A2'
-            wb.save(FilePaths.wb_path)
-            print(f"New workbook '{FilePaths.wb_name}' created with type 'custom'.")
-            return
+        print(f"New workbook '{FilePaths.wb_name}' created.")
+        sheets.update_sheets()
+        return

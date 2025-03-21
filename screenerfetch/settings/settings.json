@@ -148,5 +148,6 @@
             "name": "Pre-market Vol",
             "type": "int"
         }
-    }
+    },
+    "status": "basic"
 }
