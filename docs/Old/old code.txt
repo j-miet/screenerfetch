@@ -1,0 +1,105 @@
+"""Original fetch implementation before Pandas"""
+def fetch() -> None:
+    """Send a query to Tradingview API and fetch data based on it.
+    
+    Query and return data are both in JSON format.
+    JSON data has two components: 'totalCount' and 'data'.
+    'totalCount' lists total amount of row elements (= symbols) that request found.
+    'data' contains a list of dictionaries with 's' and 'd' keys:
+        's' contains a ticker symbol with market/exchange included in front e.g. 'NASDAQ: NVDA'.
+        'd' contains all data columns, filtered accordingly to your query, in a list format. It preserves order of columns
+            from MY_QUERY so you can easily pinpoint which value corresponds to which.
+
+    Some manual formatting is done (rounding, handling empty values) before data is written in a text file. User can
+    read the output by typing 'open txt'.
+    """
+    print('[fetch]->fetching data... ', end='')
+    raw_data = requests.post(url=URL, json=MY_QUERY, headers=REQUEST_HEADERS).json()
+    for t in range(3, 0, -1):   #artificial pause so user can't spam requests
+        print(t, end=' ')
+        time.sleep(1)
+
+    #Formatting the JSON data --- everything below this line depends on the columns & their order in MY_QUERY, COL_HEADERS & TXT_HEADERS.
+    #remove excess decimals
+    rounded = []
+    for data in raw_data['data']:
+        newcolumn = []
+        for column in data['d']:
+            if isinstance(column, float):
+                column = f"{column:.2f}"
+            newcolumn.append(column)
+        rounded.append(newcolumn)
+    #remove all decimals from float and market cap values; these are 8. and 9. columns in current query, respectively.
+    #if float/market cap are NoneTypes (no data available), replace column with '-'.
+    for col in rounded:
+        try:    #float
+            col[7] = int(float(col[7]))
+        except TypeError:
+            col[7] = '-'
+        try:    #market cap
+            col[8] = int(float(col[8]))
+        except TypeError:
+            col[8] = '-'
+
+    #finally, sort data to a table-like format and save it to a text file. Date is in YYYY-MM-DD format.
+    #the first column header & text are handled separately as they're left aligned whereas rest are right aligned.
+    #'+'-'*total_len+'\n' adds a line that separates headers from data values.
+    total_len = 0
+    with open(TXT_PATH, 'w') as file:
+        file.write(
+            '['+get_date()+']\n'
+            f"{COL_HEADERS[TXT_HEADERS[0]] : <{len(COL_HEADERS[TXT_HEADERS[0]])+h_spacing}}"
+        )
+        total_len += len(COL_HEADERS[TXT_HEADERS[0]])+h_spacing
+        for h_index in range(1, len(TXT_HEADERS)):
+            file.write(
+                f"{COL_HEADERS[TXT_HEADERS[h_index]] : >{len(COL_HEADERS[TXT_HEADERS[h_index]])+h_spacing}}"
+            )
+            total_len += len(COL_HEADERS[TXT_HEADERS[h_index]])+h_spacing
+        file.write(
+            '\n'+'-'*total_len+'\n'
+        )
+        for symbol_data in rounded:
+            file.write(
+                f"{symbol_data[0] : <{len(COL_HEADERS[TXT_HEADERS[0]])+h_spacing}}"
+            )
+            for column in range(1, len(symbol_data)):
+                file.write(
+                    f"{symbol_data[column] : >{len(COL_HEADERS[TXT_HEADERS[column]])+h_spacing}}"
+                )
+            file.write('\n')
+    query.query_data = rounded
+    print('-> Done!')
+
+
+---
+
+
+"""Previously used code to add images: this didn't work out the way it was supposed to. Fault was both in openpyxl
+and excel itself: 
+-openpyxl overrides cell image values after re-accessing a workbook (they get #Value error),
+-excel doesn't have ways to automate inserting cell images, so you would need to insert all images back to cells,
+manually, one by one.
+
+rows = get_rows()
+wb = openpyxl.load_workbook(WB_PATH)
+ws = wb[WORKSHEET1_NAME]
+img_column = [ws.cell(row=i,column=len(COL_HEADERS)) for i in range(2, rows+1)]
+for cell in img_column:
+    cell.value = None
+try:
+    for img in images:
+        date, symbol = img.split()[0], img.split()[1]
+        for sym in ws['B']:
+            if sym.value == symbol:
+                if ws.cell(row=sym.row, column=1).value == date:
+                    ws = wb[WORKSHEET1_NAME]
+                    img = openpyxl.drawing.image.Image('./screenerfetch/images/'+date+' '+symbol+'.png')
+                    img.anchor = get_column_letter(len(COL_HEADERS))+str(sym.row)
+                    img.height, img.width = 100, 100
+                    ws.add_image(img)
+    wb.save(WB_PATH)
+    print('Images updated.')
+except:
+    print('An error has occured while updating images. Exiting without saving...')
+"""

@@ -1,0 +1,24 @@
+'greater'
+'egreater'  # greater or equal
+'less'
+'eless'
+'equal'
+'nequal'
+'in_range'
+'not_in_range'  # everything but not the ones listed
+'empty'
+'nempty'    # not match
+'crosses'
+'crosses_above'
+'crosses_below'
+'match'
+'nmatch'
+'has'  # set must contain one of the values, sets are denoted with {}
+'has_none_of'  # set must NOT contain ANY of the values
+'above%'
+'below%'
+'in_range%'
+'not_in_range%'
+'in_day_range'
+'in_week_range'
+'in_month_range'

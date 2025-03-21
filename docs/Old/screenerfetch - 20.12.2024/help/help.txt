@@ -1,0 +1,116 @@
+All of API data fetching from Tradingview is based on this project:
+https://github.com/shner-elmo/TradingView-Screener
+
+More specifically, query idea is from
+https://github.com/shner-elmo/TradingView-Screener/blob/master/src/tradingview_screener/models.py
+
+and
+
+constants.txt and markets.txt have been copied from:
+https://shner-elmo.github.io/TradingView-Screener/2.5.0/tradingview_screener/constants.html
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+Using F12 development tools in your browser will help you with your specific needs so learn to use it! It will be much easier to make your own
+screener queries that way as the .txt files included within this project won't explain all the keywords and filter syntax you likely need.
+
+So how to use and read the data?
+If you wish to understand how API requests work, you should:
+
+1. open your TradingView screener url https: //www.tradingview.com/screener/... (remove space between : and // and replace ... with your identifier)
+2. press F12 to open developer tools - you should be in 'Network' tab
+3. refresh your screener page (press F5) and keep developer window open
+4. then filter URL's by 'scanner' (you should see domain scanner.tradingview.com), select 'Request' and choose (for example) the top one.
+   There should be JSON text on your screen now.
+
+How to work with the JSON stuff in 'Request' page:
+
+>each key has a name (columns, filter, markets etc.) and a type (for example [...] or {...}, meaning list or dictionary)
+This means upper-level syntax is typed as
+'key_name': [...]
+or
+'key_name': {...}
+
+You should find these key_name constants quite easily, but here's some common ones with their types
+'markets' [] -> all markets in a list format, check these in 'markets.txt'
+'options' {} -> what language you use, if english then you type {'lang' : 'en'}
+'columns' [] -> all columns for your screener (symbol, price, market cap, volume etc.)
+'filter' [] -> to filter your data, uses the 'left - operation - right' format, see below on 'Query values'
+'filter2' {} -> seconadry filter, TradingView uses this to filter symbol types. But you can just use these values within 'filter' so not necessary to use this
+'range' [] -> symbols returned, starting from first value and ending at last value, excluding this. So [0, 10] returns first 10 values: '0' being the first and '9' the last
+              Similarly [2, 100] starts from third symbol and return them all the way to value '99' (the 100th value).
+'sort' {} -> sort your screener values
+
+
+Here's an example query:
+
+{
+'markets': ['america'],
+'options': {'lang': 'en'},
+'columns': ['name', 'close', 'low', 'high', 'volume',
+            'float_shares_outstanding', 'market_cap_basic'],
+'filter': [{'left' : 'volume', 'operation' : 'greater', 'right' : 100000000},
+           {'left' : 'typespecs', 'operation' : 'has', 'right' : ['common']},
+           {'left' : 'exchange', 'operation' : 'in_range', 'right' : ['AMEX', 'NYSE', 'NASDAQ']}             
+           ],
+'sort': {'sortBy': 'close', 'sortOrder': 'desc'},
+'range': [0, 10]}
+
+-searches US markets
+-uses english as language
+-searches columns 'name', 'closing price', 'low', 'high', 'volume', 'shares float' and 'market cap'
+-filters: volume > 100M, common stock, exhanges AMEX, NYSE, NASDAQ
+-sorts by closing price, in a descending order
+-picks first 10 symbols
+
+and here's some code to print its results (check the 'fetch.py' file to see how the data is formated after it's requested and saved as JSON)
+----
+
+import requests
+
+QUERY = {
+        'markets': ['america'],
+        'options': {'lang': 'en'},
+        'columns': ['name', 'close', 'low', 'high', 'volume',
+                    'float_shares_outstanding', 'market_cap_basic'],
+        'filter': [{'left' : 'volume', 'operation' : 'greater', 'right' : 100000000},
+                   {'left' : 'typespecs', 'operation' : 'has', 'right' : ['common']},
+                   {'left' : 'exchange', 'operation' : 'in_range', 'right' : ['AMEX', 'NYSE', 'NASDAQ']}             
+                   ],
+        'sort': {'sortBy': 'close', 'sortOrder': 'desc'},
+        'range': [0, 10]}
+
+raw_data = requests.post(f'https://scanner.tradingview.com/america/scan', json=QUERY).json()
+new = []
+for data in raw_data['data']:
+    for column in data['d']:
+        new.append(column)
+print(new)
+
+
+----------------------------------
+----       Query values       ----
+----------------------------------
+
+[markets.txt]
+Contains names of all markets. 
+-To filter by country, just use same values what TradingView uses under 'Country' e.g. US would be 'United States'
+
+
+[constants.txt]
+all column values for screener.
+-Left value is the value you want, 
+-Right value is the corresponding value needed for API (= you type this value into your code)
+
+
+[operations.txt]
+all operations that can be used to filter queries
+
+filter syntax:
+{'left' : left_str, 'operation' : operation_str, 'right' : right_str}
+
+-always inside a dictionary that has three key-value pairs
+-left_str is the field we are matching to (check constants.txt, some values might be unclear at first so experiment + use that F12 console as well!)
+-operation_str is any of the operations available (check operations.txt)
+-right_str are the values we want to filter with (any value; use F12 in browser and search the values you're looking for. Might add a list later for common values.)
+
