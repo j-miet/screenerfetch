@@ -42,6 +42,9 @@ def _check_wb_validity() -> bool:
           "<columns> name, low, high, close, open, float_shares_outstanding_current, volume, market_cap_basic, " "premarket_open, premarket_close, change_from_open\n"
           "<custom column headers> Date, Symbol, Low, High, Price, Open, Float, Volume, Market Cap, Pre-market Open, "
           "Chg from Open %")
+    print("This workbook:")
+    print(*QueryVars.actual_columns)
+    print(*QueryVars.col_headers.values())
     return False
 
 def _plot_data() -> None:
@@ -156,7 +159,7 @@ def _create_custom_wb() -> None:
 def select_custom_command() -> None:
     """Lists all custom workbook commands and asks user input if workbook format is valid."""
     if _check_wb_validity():
-        with open(paths.FilePaths.settings_path+'\\settings.json') as f:
+        with open(paths.FilePaths.settings_path/'settings.json') as f:
             status_check = json.load(f)["status"]
         if status_check != 'custom':
             format_input = input("Workbook settings supported. In order to use custom wb, current wb needs to be "

@@ -162,11 +162,11 @@ def export_wb(type: str) -> None:
     """
     df = pd.read_excel(FilePaths.wb_path, sheets.WorkbookSheetNames.sheet_names[0])
     if type == 'txt': 
-        df.to_csv(FilePaths.data_path+'\\'+FilePaths.wb_name+'.txt', sep='\t', index=False)
+        df.to_csv(FilePaths.data_path/FilePaths.wb_name+'.txt', sep='\t', index=False)
     elif type == 'csv':
-        df.to_csv(FilePaths.data_path+'\\'+FilePaths.wb_name+'.csv', index=False)
+        df.to_csv(FilePaths.data_path/FilePaths.wb_name+'.csv', index=False)
     elif type == 'json':
-        df.to_json(FilePaths.data_path+'\\'+FilePaths.wb_name+'.json', indent=1)
+        df.to_json(FilePaths.data_path/FilePaths.wb_name+'.json', indent=1)
     else:
         print("Invalid file type.")
         return
@@ -197,7 +197,7 @@ def create_wb() -> None:
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
 
-        with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
+        with open(FilePaths.settings_path/'settings.json', 'w') as f:
             set_settings = {"status": "basic", 
                             "market": "global",
                             "headers": {},

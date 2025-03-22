@@ -56,7 +56,11 @@ def show_daily_average_candles() -> None:
     dates = df['Date'].unique()
     # sets a minimum height for candle bodies, especially helpful if Open=Price; naturally skews the actual values a 
     #bit, but helps with visual clarity.
-    delta = 0.001*df['High'].max(numeric_only=True)
+    try:
+        delta = 0.001*df['High'].max(numeric_only=True)
+    except TypeError:
+        print("Workbook requires data.")
+        return
 
     fig = plt.figure()
     ax_candles = fig.add_subplot(3, 1, (1,2))

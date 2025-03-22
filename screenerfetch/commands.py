@@ -17,17 +17,17 @@ def _create_workbook_files() -> None:
     for folder_path in (FilePaths.wb_files_path, FilePaths.data_path, FilePaths.settings_path):
         os.mkdir(folder_path)
     print(f"{FilePaths.wb_name}, {FilePaths.wb_name}/settings and {FilePaths.wb_name}/data created.")
-    with open(FilePaths.settings_path+'\\settings.json', 'w') as sjson:
+    with open(FilePaths.settings_path/'settings.json', 'w') as sjson:
         json.dump({"headers": {}, "market": "global", "query": {"columns": ["name"]}}, sjson, indent=4)
     print(f"{FilePaths.wb_name}/settings/settings.json created.")
-    with open(FilePaths.settings_path+'\\query.txt', 'w') as qf:
+    with open(FilePaths.settings_path/'query.txt', 'w') as qf:
         qf.writelines(('{\n', 
                        '    "columns": ["name"],\n', 
                        '    "range": [0,1]\n', 
                        '}'
                        ))
     print(f"{FilePaths.wb_name}/settings/query.txt created")
-    with open(FilePaths.settings_path+'\\headers.txt', 'w') as hf:
+    with open(FilePaths.settings_path/'headers.txt', 'w') as hf:
         hf.writelines(('{\n', 
                        '   {}', 
                        '\n}'
@@ -94,52 +94,52 @@ def update_query() -> None:
             return  
         
         elif user_input == 'query':
-            os.system(FilePaths.settings_path+'\\query.txt')
+            os.system(str(FilePaths.settings_path/'query.txt'))
             try:
-                if os.path.getsize(FilePaths.settings_path+'\\query.txt') == 0:
+                if os.path.getsize(FilePaths.settings_path/'query.txt') == 0:
                     current_query = {}
                 else:
-                    with open(FilePaths.settings_path+'\\query.txt') as f:
+                    with open(FilePaths.settings_path/'query.txt') as f:
                         current_query = json.load(f)
-                with open(FilePaths.settings_path+'\\settings.json') as f:
+                with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
                 settings['query'] = current_query
-                with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
+                with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
 
         elif user_input == 'market':
             try:
-                with open(FilePaths.settings_path+'\\settings.json') as f:
+                with open(FilePaths.settings_path/'settings.json') as f:
                         current_market = json.load(f)['market']
             except KeyError:
-                with open(FilePaths.settings_path+'\\settings.json', 'a') as f:
+                with open(FilePaths.settings_path/'settings.json', 'a') as f:
                     current_market = json.dump({"market": "global"})
             new_market = input("Type a market value: there are no validity checks so make sure the value is correct!\n"
                                "Empty input will keep the current value.\n"
                             f"Current market value: {current_market}.\n"
                             "--> ")
             if new_market != '':
-                with open(FilePaths.settings_path+'\\settings.json') as f:
+                with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
                 settings['market'] = new_market
-                with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
+                with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
                 print(f"Market set as '{new_market}'.")
                 
         elif user_input == 'headers':
-            os.system(FilePaths.settings_path+'\\headers.txt')
+            os.system(str(FilePaths.settings_path/'headers.txt'))
             try:
-                if os.path.getsize(FilePaths.settings_path+'\\headers.txt') == 0:
+                if os.path.getsize(FilePaths.settings_path/'headers.txt') == 0:
                     current_headers = {}
                 else:
-                    with open(FilePaths.settings_path+'\\headers.txt') as f:
+                    with open(FilePaths.settings_path/'headers.txt') as f:
                         current_headers = json.load(f)
-                with open(FilePaths.settings_path+'\\settings.json') as f:
+                with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
                 settings['headers'] = current_headers
-                with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
+                with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
@@ -159,7 +159,7 @@ def update_wb_file_name() -> None:
     if len(name_input) == 0:
         print('Name cannot be empty.')
     else:
-        with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json') as f:
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
             wb_fname = json.load(f)
         wb_fname['wb_name'] = name_input
         if name_input == '_default':
@@ -168,7 +168,7 @@ def update_wb_file_name() -> None:
         for _, dirs, _ in os.walk(FilePaths.WB_FILES_ROOT_PATH):
             for d in dirs:
                 if d.endswith(name_input):
-                    with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json', 'w') as f:
+                    with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
                         json.dump(wb_fname, f, indent=4)
                     FilePaths.wb_name = name_input
                     print(f"Workbook '{name_input}' selected.")
@@ -182,7 +182,7 @@ def update_wb_file_name() -> None:
                         "Type 'yes' to create one, or anything else to exit.\n"
                         "[change wb]-> ")
         if new_wb.lower() == 'yes':
-            with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json', 'w') as f:
+            with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
                 json.dump(wb_fname, f, indent=4)
             FilePaths.wb_name = name_input
             FilePaths.update_filepaths()
@@ -221,6 +221,10 @@ def save() -> None:
     they wish to include data from. After saving and closing text file, workbook_tools function save()
     is called which handles the formatting and saving data to the workbook.
     """
+    if FetchData.query_data == []:
+            print('No data available to save. Fetch data before you attempt to save it.')
+            return
+    os.system(str(FilePaths.TXT_PATH))
     check, added_symbols = commands_utils.select_saved_objects()
     if check or added_symbols != []:
         print('[save]->saving...')
@@ -282,11 +286,11 @@ def export_wb() -> None:
 
 def show_txt() -> None:
     """Opens the symbol data text file."""
-    os.system(FilePaths.TXT_PATH)
+    os.system(str(FilePaths.TXT_PATH))
 
 def show_xlsx() -> None:
     """Opens the main xlsx file."""
-    os.system(FilePaths.wb_path)
+    os.system(str(FilePaths.wb_path))
     sheets.update_sheets()
 
 def copy() -> None:
@@ -321,7 +325,7 @@ def delete_workbook() -> None:
         confirm = input(f"Are you absolutely sure you'd wish to remove '{del_input}'?\n"
                         "Type 'delete wb' to proceed, or anything else to halt deleting process.\n=>")
         if confirm == 'delete wb':
-            shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH+'\\'+del_input)
+            shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/del_input)
             print(f"Workbook '{del_input}' contents deleted succesfully!")
             return
     print("No workbook was deleted this time.")

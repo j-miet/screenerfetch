@@ -199,7 +199,7 @@ def get_column_header_data(query_cols: list[str],
 
 def update_query_variables() -> None:
     """Updates all QueryVars values."""
-    with open(FilePaths.settings_path+'\\settings.json') as f:
+    with open(FilePaths.settings_path/'settings.json') as f:
         current_settings = json.load(f)
     QueryVars.market = current_settings['market']
     QueryVars.url = f'https://scanner.tradingview.com/{QueryVars.market}/scan'
