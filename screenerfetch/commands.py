@@ -13,8 +13,33 @@ from query import QueryVars, FetchData
 import sheets
 import workbook_tools
 
+def _create_workbook_files() -> None:
+    for folder_path in (FilePaths.wb_files_path, FilePaths.data_path, FilePaths.settings_path):
+        os.mkdir(folder_path)
+    print(f"{FilePaths.wb_name}, {FilePaths.wb_name}/settings and {FilePaths.wb_name}/data created.")
+    with open(FilePaths.settings_path+'\\settings.json', 'w') as sjson:
+        json.dump({"headers": {}, "market": "global", "query": {"columns": ["name"]}}, sjson, indent=4)
+    print(f"{FilePaths.wb_name}/settings/settings.json created.")
+    with open(FilePaths.settings_path+'\\query.txt', 'w') as qf:
+        qf.writelines(('{\n', 
+                       '    "columns": ["name"],\n', 
+                       '    "range": [0,1]\n', 
+                       '}'
+                       ))
+    print(f"{FilePaths.wb_name}/settings/query.txt created")
+    with open(FilePaths.settings_path+'\\headers.txt', 'w') as hf:
+        hf.writelines(('{\n', 
+                       '   {}', 
+                       '\n}'
+                       ))
+    print(f"{FilePaths.wb_name}/settings/headers.txt created.")
+
+
 def update_query() -> None:
-    """Handles query-related updates using text and json files."""
+    """Handles query-related updates using text and json files.
+    
+    Note that these will also impact your xlsx file column names.
+    """
     print('##########################################\n'
           '==READ THIS IF YOU\'RE A FIRST-TIME USER==\n'
           '##########################################\n'
@@ -32,7 +57,7 @@ def update_query() -> None:
           '-again, you choose "Requests", but now scrolls all the way down: there should be a markets section with a' 
           'country name\n'
           'click back to program, type "market" and write your market value, then press Enter.\n'
-          '*Note* if you want to search over multiple markets then instead of a country name, type "global"!\n'
+          '*Note* if you want to search over multiple markets, say "us" and "canada", then type "global" instead!\n'
 
           '---This is everything you need...but if you wish to customize your column names for txt/excel files, check '
           'this out:----\n\n'
@@ -40,21 +65,24 @@ def update_query() -> None:
           '{\n'
            '"A" : {"name": "Date"},\n'
            '"B" : {"name": "Symbol"},\n'
-           '"C" : {"type": "float"}\n,'
-           '"D" : {"name": "Price", "type": "float"}\n,'
+           '"C" : {"type": "float"},\n'
+           '"D" : {"name": "Price", "type": "float"},\n'
            '"F" : {"name": "Volume", "type": "int"},\n'
           '}\n\n'
-          'letters refer to correspondig excel columns, name is the column name and type is the column value type.\n'
-          'Supported type values are "int" or "float": these ensure that numbers are either rounded, or are rounded' 
-          'down to 2 decimals points\n'
-          'Neither of the values are necessary so you can have name, but not type and vice versa, and if you want to ' 
-          'leave default name values and don\'t care about rounding, remove the entire row!\n'
-          '*supports only characters A-Z; if your workbook exceeds this column limit, you need to use base values for '
+          'letters refer to correspondig workbook columns, name is the column name and type is the column value type.\n'
+          'Supported type values are "int" or "float": these ensure that numbers are either rounded down to an '
+          'integer, or are rounded down to 2 decimals points\n'
+          'Neither of the name/type values are necessary so you can have name, but not type and vice versa.\n'
+          'And if you want to leave default name values and don\'t care about rounding, remove the entire row!\n'
+          '#ONLY EXCEPTION is the date row \'"A" : {"name": "Date"}\': this must always exists (name you can still '
+          'customize).\n'
+          '#supports only characters A-Z; if your workbook exceeds this column limit, you need to use base values for '
           'the rest\n\n'
           
           '/////////////////////////////\n'
           'Edit workbook settings. Type one of the following commands, or type \'back\' to return to main ui.\n'
-          'query => current query; must be in JSON format. NOTE THAT ORDER IN \'columns\' MATTERS.\n'
+          'query => current query; must be in JSON format. NOTE that order in \'columns\' matters: Nth value will '
+          'be N+1 column in .xlsx file (because first column is always date value).\n'
           'market => markets where query data is searched in - either a country/region name or \'global\' if '
           'multiple.\n'
           'headers => custom header values, useful if you want to save data in excel; must be in JSON format.\n'
@@ -67,84 +95,104 @@ def update_query() -> None:
             return  
         
         elif user_input == 'query':
-            os.system(FilePaths.SETTINGS_PATH+'\\query.txt')
+            os.system(FilePaths.settings_path+'\\query.txt')
             try:
-                if os.path.getsize(FilePaths.SETTINGS_PATH+'\\query.txt') == 0:
+                if os.path.getsize(FilePaths.settings_path+'\\query.txt') == 0:
                     current_query = {}
                 else:
-                    with open(FilePaths.SETTINGS_PATH+'\\query.txt') as f:
+                    with open(FilePaths.settings_path+'\\query.txt') as f:
                         current_query = json.load(f)
-                with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+                with open(FilePaths.settings_path+'\\settings.json') as f:
                     settings = json.load(f)
                 settings['query'] = current_query
-                with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
+                with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
 
         elif user_input == 'market':
-            with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
-                    current_market = json.load(f)['market']
+            try:
+                with open(FilePaths.settings_path+'\\settings.json') as f:
+                        current_market = json.load(f)['market']
+            except KeyError:
+                with open(FilePaths.settings_path+'\\settings.json', 'a') as f:
+                    current_market = json.dump({"market": "global"})
             new_market = input("Type a market value: there are no validity checks so make sure the value is correct!\n"
-                               f"Current market value: {current_market}.\n"
-                               "--> ")
+                               "Empty input will keep the current value.\n"
+                            f"Current market value: {current_market}.\n"
+                            "--> ")
             if new_market != '':
-                with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+                with open(FilePaths.settings_path+'\\settings.json') as f:
                     settings = json.load(f)
                 settings['market'] = new_market
-                with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
+                with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
                 print(f"Market set as '{new_market}'.")
                 
         elif user_input == 'headers':
-            os.system(FilePaths.SETTINGS_PATH+'\\headers.txt')
+            os.system(FilePaths.settings_path+'\\headers.txt')
             try:
-                if os.path.getsize(FilePaths.SETTINGS_PATH+'\\headers.txt') == 0:
+                if os.path.getsize(FilePaths.settings_path+'\\headers.txt') == 0:
                     current_headers = {}
                 else:
-                    with open(FilePaths.SETTINGS_PATH+'\\headers.txt') as f:
+                    with open(FilePaths.settings_path+'\\headers.txt') as f:
                         current_headers = json.load(f)
-                with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+                with open(FilePaths.settings_path+'\\settings.json') as f:
                     settings = json.load(f)
                 settings['headers'] = current_headers
-                with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
+                with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
 
 def update_wb_file_name() -> None:
     """Changes current workbook or creates a new one if it doesn't already exist."""
-    #workbooks = os.listdir(FilePaths.WB_FILES_PATH)
-    #print("Existing workbooks:")
-    #for wb in workbooks:
-    #    print(wb)
-    #print('###')           # uncomment these after workbook folder structure has been implemented
-    name_input = input(f"Give a new workbook file name. Current: {FilePaths.wb_name}\n[wb fname]-> ")
+    all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
+    for f_name in all_workbooks[:]:
+        if f_name.endswith(('.txt', '.json')) or f_name == '_default':
+            all_workbooks.remove(f_name)
+    print(all_workbooks)
+    print(f"Give a new workbook file name. Current: {FilePaths.wb_name}\n"
+                       "Existing workbooks: \n###")
+    for wb in all_workbooks:
+        print(wb)
+    name_input = input("###\n[wb fname]-> ")
     if len(name_input) == 0:
         print('Name cannot be empty.')
     else:
-        with open(FilePaths.SETTINGS_PATH+'\\current_wb.json') as f:
+        with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json') as f:
             wb_fname = json.load(f)
         wb_fname['wb_name'] = name_input
-        for _, _, files in os.walk(FilePaths.WB_FILES_PATH):
-            for file in files:
-                if file.startswith(name_input+'.xlsx'):
-                    with open(FilePaths.SETTINGS_PATH+'\\current_wb.json', 'w') as f:
+        if name_input == '_default':
+            print("This workbook cannot be selected!")
+            return
+        for _, dirs, _ in os.walk(FilePaths.WB_FILES_ROOT_PATH):
+            for d in dirs:
+                if d.endswith(name_input):
+                    with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json', 'w') as f:
                         json.dump(wb_fname, f, indent=4)
                     FilePaths.wb_name = name_input
-                    print(f"Workbook {name_input}.xlsx selected.")
+                    print(f"Workbook '{name_input}' selected.")
                     FilePaths.update_filepaths()
+                    query.update_query_variables()
+                    sheets.update_sheets()
                     return
         new_wb = input(f"Did not find workbook named '{name_input}'. Would you like to create one?\n"
+                       f"Folder 'workbooks/{name_input}' with necessary subfolders and files will be created "
+                       "during this process.\n"
                         "Type 'yes' to create one, or anything else to exit.\n"
                         "[change wb]-> ")
         if new_wb.lower() == 'yes':
-            with open(FilePaths.SETTINGS_PATH+'\\current_wb.json', 'w') as f:
+            with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json', 'w') as f:
                 json.dump(wb_fname, f, indent=4)
             FilePaths.wb_name = name_input
             FilePaths.update_filepaths()
+            print("Creating new folder structure under workbooks...")
+            _create_workbook_files()
+            query.update_query_variables()
             create()
-            print(f"Workbook {name_input}.xlsx created.")
+            sheets.update_sheets()
+            print(f"Workbook '{name_input}' is now available and currently selected.")
         else:
             return
 
@@ -213,7 +261,7 @@ def update_to_nums() -> None:
     
     To change selected columns, edit CUSTOM_HEADERS in query.py.
     """
-    verify = input('[update floats]-> This process can possible override important data - make sure you have copied'
+    verify = input('[update floats]-> This process can possible overwrite important data - make sure you have copied'
                    'your current workbook.\n'
                    'To proceed, type "yes".\n =>')
     if verify.lower() == 'yes':
@@ -257,3 +305,24 @@ def copy() -> None:
 def create() -> None:
     """Creates a new xlsx workbook file template, *replacing the previous one*."""
     workbook_tools.create_wb()
+
+def delete_workbook() -> None:
+    print("Select the workbook you'd like to delete permanently.")
+    all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
+    for f_name in all_workbooks[:]:
+        if f_name.endswith(('.txt', '.json')) or f_name == '_default':
+            all_workbooks.remove(f_name)
+    for wb in all_workbooks:
+        print(wb)
+    del_input = input("[delete wb]=>")
+    if del_input == FilePaths.wb_name:
+        print("Cannot delete currently used workbook. Halting deletion process.")
+        return
+    if del_input in all_workbooks:
+        confirm = input(f"Are you absolutely sure you'd wish to remove '{del_input}'?\n"
+                        "Type 'delete wb' to proceed, or anything else to halt deleting process.\n=>")
+        if confirm == 'delete wb':
+            shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH+'\\'+del_input)
+            print(f"Workbook '{del_input}' contents deleted succesfully!")
+            return
+    print("No workbook was deleted this time.")
