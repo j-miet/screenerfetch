@@ -34,7 +34,6 @@ def _create_workbook_files() -> None:
                        ))
     print(f"{FilePaths.wb_name}/settings/headers.txt created.")
 
-
 def update_query() -> None:
     """Handles query-related updates using text and json files.
     

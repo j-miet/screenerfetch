@@ -156,7 +156,7 @@ def _create_custom_wb() -> None:
 def select_custom_command() -> None:
     """Lists all custom workbook commands and asks user input if workbook format is valid."""
     if _check_wb_validity():
-        with open(paths.FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+        with open(paths.FilePaths.settings_path+'\\settings.json') as f:
             status_check = json.load(f)["status"]
         if status_check != 'custom':
             format_input = input("Workbook settings supported. In order to use custom wb, current wb needs to be "
@@ -172,7 +172,7 @@ def select_custom_command() -> None:
         custom_input = input("Type any of the custom commands below, or 'back' to return.\n"
             "add row = adds a row for existing symbol in the second worksheet "
             f"{sheets.WorkbookSheetNames.sheet_names[1]}; has custom columns.\n"
-            "notes = adds/overrides notes for any listed symbol in "
+            "notes = adds/overwrites notes for any listed symbol in "
             f"{sheets.WorkbookSheetNames.sheet_names[1]} sheet.\n"
             f"images = add hyperlinks in {sheets.WorkbookSheetNames.sheet_names[1]} sheet which point "
                 "to 'custom/images' folder.\n"
