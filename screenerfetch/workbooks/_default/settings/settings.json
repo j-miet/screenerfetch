@@ -1,0 +1,14 @@
+{
+    "status": "basic",
+    "market": "global",
+    "headers": {},
+    "query": {
+        "columns": [
+            "name"
+        ],
+        "range": [
+            0,
+            1
+        ]
+    }
+}

@@ -1,0 +1,258 @@
+{
+    "status": "custom",
+    "market": "america",
+    "query": {
+        "columns": [
+            "name",
+            "description",
+            "logoid",
+            "update_mode",
+            "type",
+            "typespecs",
+            "open",
+            "pricescale",
+            "minmov",
+            "fractional",
+            "minmove2",
+            "currency",
+            "close",
+            "low",
+            "high",
+            "change_from_open",
+            "change",
+            "volume",
+            "float_shares_outstanding_current",
+            "market_cap_basic",
+            "fundamental_currency_code",
+            "premarket_open",
+            "premarket_close",
+            "premarket_change",
+            "premarket_volume",
+            "exchange"
+        ],
+        "filter": [
+            {
+                "left": "premarket_change",
+                "operation": "greater",
+                "right": 7
+            },
+            {
+                "left": "premarket_volume",
+                "operation": "greater",
+                "right": 250000
+            },
+            {
+                "left": "premarket_close",
+                "operation": "less",
+                "right": 20
+            },
+            {
+                "left": "exchange",
+                "operation": "in_range",
+                "right": [
+                    "AMEX",
+                    "NYSE",
+                    "NASDAQ"
+                ]
+            }
+        ],
+        "filter2": {
+            "operands": [
+                {
+                    "operation": {
+                        "operands": [
+                            {
+                                "operation": {
+                                    "operands": [
+                                        {
+                                            "expression": {
+                                                "left": "type",
+                                                "operation": "equal",
+                                                "right": "stock"
+                                            }
+                                        },
+                                        {
+                                            "expression": {
+                                                "left": "typespecs",
+                                                "operation": "has",
+                                                "right": [
+                                                    "common"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "operator": "and"
+                                }
+                            }
+                        ],
+                        "operator": "or"
+                    }
+                },
+                {
+                    "operation": {
+                        "operands": [
+                            {
+                                "operation": {
+                                    "operands": [
+                                        {
+                                            "expression": {
+                                                "left": "type",
+                                                "operation": "equal",
+                                                "right": "stock"
+                                            }
+                                        },
+                                        {
+                                            "expression": {
+                                                "left": "typespecs",
+                                                "operation": "has",
+                                                "right": [
+                                                    "common"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "operator": "and"
+                                }
+                            },
+                            {
+                                "operation": {
+                                    "operands": [
+                                        {
+                                            "expression": {
+                                                "left": "type",
+                                                "operation": "equal",
+                                                "right": "stock"
+                                            }
+                                        },
+                                        {
+                                            "expression": {
+                                                "left": "typespecs",
+                                                "operation": "has",
+                                                "right": [
+                                                    "preferred"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "operator": "and"
+                                }
+                            },
+                            {
+                                "operation": {
+                                    "operands": [
+                                        {
+                                            "expression": {
+                                                "left": "type",
+                                                "operation": "equal",
+                                                "right": "dr"
+                                            }
+                                        }
+                                    ],
+                                    "operator": "and"
+                                }
+                            },
+                            {
+                                "operation": {
+                                    "operands": [
+                                        {
+                                            "expression": {
+                                                "left": "type",
+                                                "operation": "equal",
+                                                "right": "fund"
+                                            }
+                                        },
+                                        {
+                                            "expression": {
+                                                "left": "typespecs",
+                                                "operation": "has_none_of",
+                                                "right": [
+                                                    "etf"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "operator": "and"
+                                }
+                            }
+                        ],
+                        "operator": "or"
+                    }
+                }
+            ],
+            "operator": "and"
+        },
+        "ignore_unknown_fields": false,
+        "markets": [
+            "america"
+        ],
+        "options": {
+            "lang": "en"
+        },
+        "range": [
+            0,
+            100
+        ],
+        "sort": {
+            "sortBy": "premarket_change",
+            "sortOrder": "desc"
+        },
+        "symbols": {}
+    },
+    "headers": {
+        "B": {
+            "name": "Symbol"
+        },
+        "C": {
+            "name": "Open",
+            "type": "float"
+        },
+        "D": {
+            "name": "Price",
+            "type": "float"
+        },
+        "E": {
+            "name": "Low",
+            "type": "float"
+        },
+        "F": {
+            "name": "High",
+            "type": "float"
+        },
+        "G": {
+            "name": "Chg from Open %",
+            "type": "float"
+        },
+        "H": {
+            "name": "Change %",
+            "type": "float"
+        },
+        "I": {
+            "name": "Volume",
+            "type": "int"
+        },
+        "J": {
+            "name": "Float",
+            "type": "int"
+        },
+        "K": {
+            "name": "Market Cap",
+            "type": "int"
+        },
+        "L": {
+            "name": "Pre-market Open",
+            "type": "float"
+        },
+        "M": {
+            "name": "Pre-market Close",
+            "type": "float"
+        },
+        "N": {
+            "name": "Pre-market Chg %",
+            "type": "float"
+        },
+        "O": {
+            "name": "Pre-market Vol",
+            "type": "int"
+        }
+    }
+}

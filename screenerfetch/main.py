@@ -7,6 +7,7 @@ This project wouldn't be possible without accesing the non-public TradingView ap
 
 import json
 import shutil
+import shutil
 import sys
 
 import commands
@@ -17,10 +18,18 @@ import sheets
 
 def main() -> None:
     """Opens the command line user interface."""
-    with open(FilePaths.SETTINGS_PATH+'\\current_wb.json') as f:
+    with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json') as f:
         names_json = json.load(f)
     FilePaths.wb_name = names_json["wb_name"]
     FilePaths.update_filepaths()
+    try:
+        sheets.update_sheets()
+    except FileNotFoundError:
+        with open(FilePaths.WB_FILES_ROOT_PATH+'\\current_wb.json', 'w') as f:
+            names_json["wb_name"] = '_default'
+            json.dump(names_json, f, indent=4)
+        FilePaths.wb_name = names_json["wb_name"]
+        FilePaths.update_filepaths()
     sheets.update_sheets()
     query.update_query_variables()
 
@@ -47,7 +56,7 @@ def main() -> None:
                 f"into {FilePaths.wb_autocopy_name}.xlsx; replaces previous copy.\n"
         "print => prints current MY_QUERY contents.\n"
 
-        f"FORMAT WB => overrides current {FilePaths.wb_name}.xlsx. Fresh workbook has only column headers defined.\n"
+        f"FORMAT WB => overwrites current {FilePaths.wb_name}.xlsx. Fresh workbook has only column headers defined.\n"
         "update date => update dates to yyyy/mm/dd format in case they show as yyyy/mm/dd; hh.mm.ss.\n"
         "update nums => update all customly listed columns to numerical values - so don't use this on other than"
             "columns with numerical values!\n\t\t"
@@ -72,6 +81,9 @@ def main() -> None:
     
     print(_COMMAND_MESSAGE)
     while True:
+        while FilePaths.wb_name == '_default':
+            print("\n***Previously used workbook no longer exists. Select/create a new workbook to proceed.***\n")
+            commands.update_wb_file_name()
         user_input = input(f'--------------------\n[main | WB={FilePaths.wb_name}]>>> ')
         match user_input:
             case 'help':
@@ -100,6 +112,8 @@ def main() -> None:
                 commands.copy()
             case 'FORMAT WB':
                 commands.create()
+            case 'DELETE WB':
+                commands.delete_workbook()
             case 'export wb':
                 commands.export_wb()
             case 'exit':           
@@ -115,7 +129,7 @@ def main() -> None:
 if __name__ == '__main__':
     # for running quick run.bat: fetch data, save all in a workbook, then make a copy of current workbook.
     if len(sys.argv) > 1 and sys.argv[1] == 'fetch saveall copy':
-        with open(FilePaths.SETTINGS_PATH+'\\current_wb.json') as f:
+        with open(FilePaths.wb_files_path+'\\current_wb.json') as f:
             names_json = json.load(f)
         FilePaths.wb_name = names_json["wb_name"]
         FilePaths.update_filepaths()
@@ -123,7 +137,7 @@ if __name__ == '__main__':
         query.update_query_variables()
         commands.fetch()
         commands.saveall()
-        shutil.copy2(FilePaths.wb_path, FilePaths.wb_autocopy_path) # doesn't override manual copy, only autocopy.
+        shutil.copy2(FilePaths.wb_path, FilePaths.wb_autocopy_path) # doesn't overwrite manual copy, only autocopy.
         sys.exit()
     else:
         main()

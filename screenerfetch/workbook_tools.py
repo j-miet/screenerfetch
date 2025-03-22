@@ -94,7 +94,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
 
     Remember to verify that 
      -column characters and numbers match AND
-     -make a copy before running this first time, otherwise you could accidentally override important data!
+     -make a copy before running this first time, otherwise you could accidentally overwrite important data!
 
     Jumps over when encountering an error: most typical error is to have TypeError when cell is empty and returns None.
 
@@ -162,11 +162,11 @@ def export_wb(type: str) -> None:
     """
     df = pd.read_excel(FilePaths.wb_path, sheets.WorkbookSheetNames.sheet_names[0])
     if type == 'txt': 
-        df.to_csv(FilePaths.DATA_PATH+'\\'+FilePaths.wb_name+'.txt', sep='\t', index=False)
+        df.to_csv(FilePaths.data_path+'\\'+FilePaths.wb_name+'.txt', sep='\t', index=False)
     elif type == 'csv':
-        df.to_csv(FilePaths.DATA_PATH+'\\'+FilePaths.wb_name+'.csv', index=False)
+        df.to_csv(FilePaths.data_path+'\\'+FilePaths.wb_name+'.csv', index=False)
     elif type == 'json':
-        df.to_json(FilePaths.DATA_PATH+'\\'+FilePaths.wb_name+'.json', indent=1)
+        df.to_json(FilePaths.data_path+'\\'+FilePaths.wb_name+'.json', indent=1)
     else:
         print("Invalid file type.")
         return
@@ -175,7 +175,7 @@ def export_wb(type: str) -> None:
 def create_wb() -> None:
     """Creates a new workbook main file and names the worksheet with sheets.WorkbookSheetNames.sheet_names[0] value.
     
-    Calling this function will override the existing workbook file.
+    Calling this function will overwrite the contents of existing workbook file.
 
     Args:
         wb_type: Either 'basic' for data-only workbook, or 'custom' for user-customized workbook template.
@@ -197,12 +197,14 @@ def create_wb() -> None:
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
 
-        with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
-            settings = json.load(f)
-            settings['status'] = 'basic'
-        with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
-            json.dump(settings, f, indent=4)
+        with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
+            set_settings = {"status": "basic", 
+                            "market": "global",
+                            "headers": {},
+                            "query": {"columns": ["name"], "range": [0,1]}
+            }
+            json.dump(set_settings, f, indent=4)
 
-        print(f"New workbook '{FilePaths.wb_name}' created.")
+        print(f"New workbook {FilePaths.wb_name}.xlsx created.")
         sheets.update_sheets()
         return
