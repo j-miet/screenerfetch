@@ -120,7 +120,7 @@ def custom_update_datetime() -> None:
             print('Date format updated.')
 
 def create_custom_wb() -> None:
-    """Create custom workbook. Will override currently existing wb with same name."""
+    """Create custom workbook. Will overwrite contents of currently existing wb with same name."""
     wb = openpyxl.Workbook()
     ws_data = wb.active
     if ws_data is not None:
@@ -154,12 +154,14 @@ def create_custom_wb() -> None:
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
 
-        with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
-            settings = json.load(f)
-            settings['status'] = 'custom'
-        with open(FilePaths.SETTINGS_PATH+'\\settings.json', 'w') as f:
-            json.dump(settings, f, indent=4)
+        with open(FilePaths.settings_path+'\\settings.json', 'w') as f:
+            set_settings = {"status": "custom", 
+                            "market": "global",
+                            "headers": {},
+                            "query": {"columns": ["name"], "range": [0,1]}
+            }
+            json.dump(set_settings, f, indent=4)
 
-        print(f"New custom workbook '{FilePaths.wb_name}' created.")
+        print(f"New custom workbook {FilePaths.wb_name}.xlsx created.")
         sheets.update_sheets()
         return
