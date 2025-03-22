@@ -7,7 +7,7 @@ settings and update page.
 You can create a query by writing it yourself, or just copy all the code from request page with
 right click -> Copy All.
 
-To setup your own query + save its contents in a workbook, use commands 'update query' in ui.
+To setup your own query + save its contents in a workbook, use the command 'update query' in ui.
 
 Example
 --- 
@@ -174,11 +174,12 @@ def get_column_header_data(query_cols: list[str],
         a 3-tuple of column headers with their names, integer column headers, and float column headers.
     """
     init_column_headers = {char: name for char, name in zip(header_chars, ['date']+(query_cols))}
-    for header in copy.deepcopy(init_column_headers).keys():
-        try:
-            init_column_headers[header]= custom_headers[header]['name']
-        except KeyError:
-            ...
+    if len(custom_headers.keys()) > 0:
+        for header in copy.deepcopy(init_column_headers).keys():
+            try:
+                init_column_headers[header] = custom_headers[header]['name']
+            except KeyError:
+                ...
     column_headers = {key+'1': val for key, val in init_column_headers.items()}
 
     int_columns = []
@@ -198,7 +199,7 @@ def get_column_header_data(query_cols: list[str],
 
 def update_query_variables() -> None:
     """Updates all QueryVars values."""
-    with open(FilePaths.SETTINGS_PATH+'\\settings.json') as f:
+    with open(FilePaths.settings_path+'\\settings.json') as f:
         current_settings = json.load(f)
     QueryVars.market = current_settings['market']
     QueryVars.url = f'https://scanner.tradingview.com/{QueryVars.market}/scan'
