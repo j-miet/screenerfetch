@@ -110,19 +110,13 @@ def update_query() -> None:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
 
         elif user_input == 'market':
-            try:
-                with open(FilePaths.settings_path/'settings.json') as f:
-                        current_market = json.load(f)['market']
-            except KeyError:
-                with open(FilePaths.settings_path/'settings.json', 'a') as f:
-                    current_market = json.dump({"market": "global"})
+            with open(FilePaths.settings_path/'settings.json') as f:
+                    settings = json.load(f)
             new_market = input("Type a market value: there are no validity checks so make sure the value is correct!\n"
                                "Empty input will keep the current value.\n"
-                            f"Current market value: {current_market}.\n"
+                            f"Current market value: {settings['market']}.\n"
                             "[update query>market]>>>")
             if new_market != '':
-                with open(FilePaths.settings_path/'settings.json') as f:
-                    settings = json.load(f)
                 settings['market'] = new_market
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
