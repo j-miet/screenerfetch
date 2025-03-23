@@ -1,0 +1,7 @@
+This project was mostly done without git.
+ -Only version control system was to occasionally create copies of current project directory and name them on that date.
+
+For this reason, git & github have commits from 21.03.2025 and onwards, even if original project directory was already 
+created on 31.10.2024.
+
+I've added the earliest copy of screenerfetch under docs/Old, in case you'd like to see how it looked back then.

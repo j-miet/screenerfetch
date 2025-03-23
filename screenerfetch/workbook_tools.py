@@ -162,11 +162,11 @@ def export_wb(type: str) -> None:
     """
     df = pd.read_excel(FilePaths.wb_path, sheets.WorkbookSheetNames.sheet_names[0])
     if type == 'txt': 
-        df.to_csv(FilePaths.data_path/FilePaths.wb_name+'.txt', sep='\t', index=False)
+        df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.txt'), sep='\t', index=False)
     elif type == 'csv':
-        df.to_csv(FilePaths.data_path/FilePaths.wb_name+'.csv', index=False)
+        df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.csv'), index=False)
     elif type == 'json':
-        df.to_json(FilePaths.data_path/FilePaths.wb_name+'.json', indent=1)
+        df.to_json(FilePaths.data_path/str(FilePaths.wb_name+'.json'), indent=1)
     else:
         print("Invalid file type.")
         return
@@ -185,8 +185,9 @@ def remove_duplicates() -> None:
             current = (row[0].value, row[1].value)
             for row2 in ws.iter_rows(min_row=2, min_col=1, max_col=2):
                 match = (row2[0].value, row2[1].value)
-                if (row[0].row != row2[0].row
-                    and current[0] != None
+                if (row[0].row is not None 
+                    and row[0].row != row2[0].row
+                    and current[0] is not None
                     and current[0] == match[0] 
                     and current[1] == match[1]):
                     ws.delete_rows(row[0].row, 1)

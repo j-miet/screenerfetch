@@ -94,11 +94,11 @@ def add_image_hyperlinks(input_str: str) -> None:
             if sym.value == symbol:
                 if ws.cell(row=sym.row, column=1).value.date() == date_datetime.date(): # type: ignore
                     r = str(sym.row)
-                    ws['D'+r].hyperlink = FilePaths.PATH+'custom'/'images'+symbol+' '+date+'.png'
+                    ws['D'+r].hyperlink = FilePaths.PATH/'custom'/'images'/str(symbol+' '+date+'.png')
                     ws['D'+r].value = 'Image'
                     ws['D'+r].style = "Hyperlink"
                     ws['D'+r].alignment = Alignment(horizontal='center')
-                    ws['E'+r].hyperlink = FilePaths.PATH/'custom'/'images'/symbol+' '+date+' D'+'.png'
+                    ws['E'+r].hyperlink = FilePaths.PATH/'custom'/'images'/str(symbol+' '+date+' D'+'.png')
                     ws['E'+r].value = 'Image'
                     ws['E'+r].style = "Hyperlink"
                     ws['E'+r].alignment = Alignment(horizontal='center')

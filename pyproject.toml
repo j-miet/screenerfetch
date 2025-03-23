@@ -3,3 +3,6 @@ pythonpath = ["screenerfetch", "tests"]
 addopts = [
     "--import-mode=importlib",
 ]
+
+[tool.mypy]
+explicit_package_bases=true

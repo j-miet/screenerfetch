@@ -7,7 +7,6 @@ This project wouldn't be possible without accesing the non-public TradingView ap
 
 import json
 import shutil
-import shutil
 import sys
 
 import commands
@@ -40,14 +39,13 @@ def main() -> None:
         "Commands\n"
         "--------------------------------------------------------\n"
         "help => how to get started.\n"
-        "cw/change wb => change current workbook, or create new ones. You can see your currently selected "
-        "workbook as 'WB=...' when in main ui.\n"
+        "cw/change wb => change current workbook. Is also used in creating new ones. You can see your currently "
+        "selected workbook on CLI as 'WB=...'\n"
         "uq/update query => update query data, market and (optional) custom header values.\n"
         "f/fetch => fetch data from TradingView API based on query.MY_QUERY.\n"
-        f"s/save => shows fetched data by opening data/{FilePaths.TXT_NAME}.txt.\n"
-            "\t  Add '+' in front of each symbol "
-            f"you'd wish to add, then save file. Data of each symbol is stored in workbooks/{FilePaths.wb_name}.xlsx "
-            "file.\n"
+        f"s/save => shows fetched data by opening data/{FilePaths.TXT_NAME}.txt. Add '+' in front of each symbol "+
+            f"you'd wish to add, then save file.\n "
+            f"\t  Data for each symbol is stored in workbooks/{FilePaths.wb_name}.xlsx file.\n"
         f"all/save all => saves all fetched data to {FilePaths.wb_name}.xlsx.\n"
         f"txt/open txt => opens {FilePaths.wb_name}.txt file where you see the fetched data.\n"
         f"e/excel => opens {FilePaths.wb_name}.xlsx file which contains all symbols you saved.\n"
