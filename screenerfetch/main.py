@@ -40,11 +40,12 @@ def main() -> None:
         "Commands\n"
         "--------------------------------------------------------\n"
         "help => how to get started.\n"
-        "cw/change wb => change current workbook. Is also used to create new ones. You can see your currently selected "
-        "workbook on CLI as 'WB=...'\n"
+        "cw/change wb => change current workbook, or create new ones. You can see your currently selected "
+        "workbook as 'WB=...' when in main ui.\n"
         "uq/update query => update query data, market and (optional) custom header values.\n"
         "f/fetch => fetch data from TradingView API based on query.MY_QUERY.\n"
-        f"s/save => shows fetched data by opening data/{FilePaths.TXT_NAME}.txt. Add '+' in front of each symbol "+
+        f"s/save => shows fetched data by opening data/{FilePaths.TXT_NAME}.txt.\n"
+            "\t  Add '+' in front of each symbol "
             f"you'd wish to add, then save file. Data of each symbol is stored in workbooks/{FilePaths.wb_name}.xlsx "
             "file.\n"
         f"all/save all => saves all fetched data to {FilePaths.wb_name}.xlsx.\n"
@@ -53,22 +54,27 @@ def main() -> None:
         f"copy => copy your current {FilePaths.wb_name}.xlsx file into {FilePaths.wb_manual_copy_name}.xlsx; replaces " 
             "previous copy.\n"
         f"export wb => reads {FilePaths.wb_name}.xlsx and saves data in selected format inside 'data' folder.\n"
-        f"exit => close the program and copy current {FilePaths.wb_name}.xlsx data "+
+        f"exit => close the program and copy current {FilePaths.wb_name}.xlsx data "
                 f"into '{FilePaths.wb_autocopy_name}.xlsx'; replaces previous copy.\n"
         "print => prints current MY_QUERY contents.\n"
 
         f"FORMAT WB => overwrites current {FilePaths.wb_name}.xlsx. Fresh workbook has only column headers defined.\n"
-        "\t\tThis preserves all settings files - so change those with 'update query' command, then format afterwards if"
-        " you need to update columns in xlsx files.\n"
+        "\t     This preserves all settings files - so change those with 'update query' command, then format \n"
+        "\t     afterwards if you need to update columns in xlsx files.\n"
         "DELETE WB => deletes selected workbook directory and all its contents.\n"
         "update date => update dates to yyyy/mm/dd format in case they show as yyyy/mm/dd; hh.mm.ss.\n"
         "update nums => update all customly listed columns to numerical values - so don't use this on other than "
-            "columns with numerical values!\n\t\t"
-            "Select different columns by modifying query.py CUSTOM_HEADERS.\n"
+        "columns with numerical values!\n"
+            "\t       Select different columns by modifying query.py CUSTOM_HEADERS.\n"
+        f"remove duplicates => removes all duplicate rows from {FilePaths.wb_name}.xlsx. Duplicate rows are those with "
+        "same data and symbol name.\n"
+        "\t\t     Remove iterates in reverse, meaning higher row indices are removed and lowest stays untouched.\n"
+        "\t\t     E.g. if rows 10, 20, 35 have same date and name, only 10 stays.\n"
+        "\t\t     Gaps are automatically adjusted: when a row is deleted, newer rows will move one index down.\n"
         
         "custom => custom commands. These are meant for user-specific query+workbook combos and should be "
             "manually implemented.\n\t"+
-            "Using them without correct query and workbook structure will likely crash this program.")
+            "  Using them without correct query and workbook structure will likely crash this program.")
     _HELP_MESSAGE = (">>>Quick guide on how to run this<<<\n"
                     "When typing commands, ignore the quotations. Some commands have normal & short notation, as seen "
                     "below.\n"
@@ -116,6 +122,8 @@ def main() -> None:
                 commands.update_date_format()
             case 'update nums':
                 commands.update_to_nums()
+            case 'remove duplicates':
+                commands.remove_duplicate_data()
             case 'copy':
                 commands.copy()
             case 'FORMAT WB':
@@ -137,7 +145,7 @@ def main() -> None:
                 print('Unknown command.')
 
 if __name__ == '__main__':
-    # for running quick run.bat: fetch data, save all in a workbook, then make a copy of current workbook.
+    # for running quick run.bat: fetch data, save all data in current workbook, then make a copy of this workbook.
     if len(sys.argv) > 1:
         with open(FilePaths.wb_files_path/'current_wb.json') as f:
             names_json = json.load(f)

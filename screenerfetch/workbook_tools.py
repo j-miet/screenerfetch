@@ -172,6 +172,34 @@ def export_wb(type: str) -> None:
         return
     print(f'{FilePaths.wb_name}.'+type+' created.')
 
+def remove_duplicates() -> None:
+    """Remove duplicate rows from current .xlsx file.
+    
+    Uses date and symbol name to differentiate rows: one symbol cannot exists twice on same day.
+    """
+    wb = openpyxl.load_workbook(FilePaths.wb_path)
+    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    counter = 0
+    if ws is not None:
+        for row in reversed(list(ws.iter_rows(min_row=2, min_col=1, max_col=2))):
+            current = (row[0].value, row[1].value)
+            for row2 in ws.iter_rows(min_row=2, min_col=1, max_col=2):
+                match = (row2[0].value, row2[1].value)
+                if (row[0].row != row2[0].row
+                    and current[0] != None
+                    and current[0] == match[0] 
+                    and current[1] == match[1]):
+                    ws.delete_rows(row[0].row, 1)
+                    counter += 1
+                    print(f"Removed row number {row[0].row}.")
+                    break
+    if counter == 1:
+        print("1 row was removed.")
+    else:
+        print(f"{counter} rows were removed.")
+    if counter > 0:
+        wb.save(FilePaths.wb_path)
+                
 def create_wb() -> None:
     """Creates a new workbook main file and names the worksheet with sheets.WorkbookSheetNames.sheet_names[0] value.
     
@@ -192,7 +220,7 @@ def create_wb() -> None:
             current = ws_data.cell(column=i, row=1)
             current.alignment = Alignment(horizontal='right')
         # before a style can be used, it has to be allocated to any cell. After this, any future cells can simply 
-        # copy the style by using its name attribute "datetime".
+        # copy the style by using self.style = "datetime".
         ws_data['A2'].style = NamedStyle(name="datetime", number_format='YYYY/MM/DD')
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
