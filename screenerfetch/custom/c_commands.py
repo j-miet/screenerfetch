@@ -58,7 +58,7 @@ def _plot_data() -> None:
                     'dist => display some distributions.\n'
                     'float => scatter plot distribution of open-to-high prices and share float.\n')
     while True:
-        user_input = input('[plot]-> ')
+        user_input = input('[plot]>>>')
         if user_input == 'back':
             return
         elif user_input == 'avg daily':
@@ -67,7 +67,8 @@ def _plot_data() -> None:
             plot.show_average_lines()
         elif user_input == 'daily cs':
             date_input = input('Enter a date found that corresponds to an existing date in your excel workbook. ' 
-                               'Date must in format "YYYY-MM-DD" (with \'-\' as separator!).\n=>')
+                               'Date must in format "YYYY-MM-DD" (with \'-\' as separator!).\n'
+                               '[plot>daily cs]>>>')
             if workbook_tools.check_date(date_input):
                 plot.show_daily_candles(date_input)
         elif user_input == 'dist':
@@ -89,7 +90,7 @@ def _add_row_in_sheet2() -> None:
           '-> '   
           )
     while True:
-        input_data = input('[sheet2: add row]-> ')
+        input_data = input('[plot>add row to sheet2]>>>')
         if input_data == 'back':
             return
         try:
@@ -109,7 +110,7 @@ def _add_notes() -> None:
           '-> '   
           )
     while True:
-        input_data = input('[notes]-> ')
+        input_data = input('[plot>notes]>>>')
         if input_data == 'back':
             return
         try:
@@ -142,7 +143,7 @@ def _add_images() -> None:
           '-> '   
           )
     while True:
-        input_data = input('[images]-> ')
+        input_data = input('[plot>images]>>>')
         if input_data == 'back':
             return
         try:
@@ -164,7 +165,7 @@ def select_custom_command() -> None:
         if status_check != 'custom':
             format_input = input("Workbook settings supported. In order to use custom wb, current wb needs to be "
             "formated to fit the custom layout.\nType 'FORMAT CUSTOM WB' to proceed, or anything else to skip.\n"
-            "-> ")
+            "[plot>format]>>>")
             if format_input == 'FORMAT CUSTOM WB':
                 _create_custom_wb()
             else:
@@ -181,7 +182,7 @@ def select_custom_command() -> None:
                 "to 'custom/images' folder.\n"
             "plot = commands for visualizing symbol data of current workbook.\n"
             "FORMAT WB = formats current workbook to custom format.\n"
-            "[custom]>>> ")
+            "[custom]>>>")
         if custom_input == 'add row':
             _add_row_in_sheet2()
         elif custom_input == 'notes':

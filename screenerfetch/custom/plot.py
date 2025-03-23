@@ -1,12 +1,6 @@
 """Data plotting functions for custom workbooks.
 
-Data is read from current workbook - make sure one exists in 'workbooks' folder.
-
 These functions only work for current custom query, unless yours happens to share similar columns. Currently, it means you need the following column names & my_query columns:  
-________________________________________________   
-header = your custom query headers (also your workbook headers)  
-my_query column =  actual TradingView API column value; value is wrapped in parethesis - don't include those, just the 
-    string inside.
 
 _________________________  
 'Date'  (nothing, not part of my_query - will always be first column, automatically)  
@@ -20,6 +14,8 @@ _________________________
 'Market Cap' ('market_cap_basic')  
 'Pre-market Open' ('premarket_open')  
 'Chg from Open %' ('change_from_open')
+
+-Left is the custom column name, right the actual Tradingview API column name.
 """
 
 from collections import namedtuple
@@ -52,7 +48,7 @@ def show_daily_average_candles() -> None:
     # read_excel orders columns based on their sheet order: currently, columns are ordered Open < Price < Low < High. 
     # So line below re-arranges columns to a order that aligns with the rest of code: Low < High < Price < Open.
     df = df[['Date', 'Low', 'High', 'Price', 'Open']] 
-    df['Date'] = df['Date'].apply(lambda x: str(x).replace(' 00:00:00', '')) #normalize datetime object values.
+    df['Date'] = df['Date'].apply(lambda x: str(x).replace(' 00:00:00', '')) # normalize datetime object values.
     dates = df['Date'].unique()
     # sets a minimum height for candle bodies, especially helpful if Open=Price; naturally skews the actual values a 
     #bit, but helps with visual clarity.
@@ -259,8 +255,7 @@ def show_distributions() -> None:
     ax_hist1.set_title('Frequency of High-to-Open % values')
     ax_hist1.set_xlabel('High-to-Open % = ((High price/Open price)-1)*100)', fontdict=font_x)
     ax_hist1.set_ylabel('Frequency (log base 2)', fontdict=font_y)
-    # if histogram values are way too high, consider logarithmic scale
-    ax_hist1.set_yscale('log', base=2)
+    ax_hist1.set_yscale('log', base=2) # if histogram values are way too high, consider logarithmic scale
     ax_hist1.locator_params(axis='x', nbins=10)
     df['High-to-Open %'].hist(ax=ax_hist1, bins=30, grid=False, edgecolor='black', color='lightblue',
                               label=f'Highest: {df['High-to-Open %'].max(numeric_only=True):.2f} %')

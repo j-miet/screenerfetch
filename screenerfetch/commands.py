@@ -87,7 +87,7 @@ def update_query() -> None:
           'headers => custom header values, useful if you want to save data in excel; must be in JSON format.\n'
           '...or type \'back\' to return to main ui.\n')
     while True:
-        user_input = input('[update query]-> ')
+        user_input = input('[update query]>>>')
         if user_input == 'back':
             query.update_query_variables()
             print('Query values updated.')
@@ -119,7 +119,7 @@ def update_query() -> None:
             new_market = input("Type a market value: there are no validity checks so make sure the value is correct!\n"
                                "Empty input will keep the current value.\n"
                             f"Current market value: {current_market}.\n"
-                            "--> ")
+                            "[update query>market]>>>")
             if new_market != '':
                 with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
@@ -150,12 +150,13 @@ def update_wb_file_name() -> None:
     for f_name in all_workbooks[:]:
         if f_name.endswith(('.txt', '.json')) or f_name == '_default':
             all_workbooks.remove(f_name)
-    print(all_workbooks)
-    print(f"Give a new workbook file name. Current: {FilePaths.wb_name}\n"
-                       "Existing workbooks: \n###")
+    print("--Non-empty input to select/create workbook, empty input to exit--\n"
+            f">Current: {FilePaths.wb_name}\n"
+                        "Existing workbooks:\n"
+                        "====================")
     for wb in all_workbooks:
         print(wb)
-    name_input = input("###\n[wb fname]-> ")
+    name_input = input("====================\n[change wb]>>>")
     if len(name_input) == 0:
         print('Name cannot be empty.')
     else:
@@ -180,7 +181,7 @@ def update_wb_file_name() -> None:
                        f"Folder 'workbooks/{name_input}' with necessary subfolders and files will be created "
                        "during this process.\n"
                         "Type 'yes' to create one, or anything else to exit.\n"
-                        "[change wb]-> ")
+                        "[change wb>new wb]>>>")
         if new_wb.lower() == 'yes':
             with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
                 json.dump(wb_fname, f, indent=4)
@@ -204,9 +205,6 @@ def fetch() -> None:
     request_data_json = requests.post(url=QueryVars.url, 
                                       json=QueryVars.my_query, 
                                       headers=FetchData.REQUEST_HEADERS).json()
-    #for t in range(3, 0, -1):   # artificial pause to prevent user from spamming requests.
-    #    print(t, end=' ', flush=True)
-    #    time.sleep(1)
     dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
     dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
     commands_utils.create_fetch_display_txt(dataframe_str_list)
@@ -221,23 +219,25 @@ def save() -> None:
     they wish to include data from. After saving and closing text file, workbook_tools function save()
     is called which handles the formatting and saving data to the workbook.
     """
+    print('[save]->', end='')
     if FetchData.query_data == []:
             print('No data available to save. Fetch data before you attempt to save it.')
             return
     os.system(str(FilePaths.TXT_PATH))
     check, added_symbols = commands_utils.select_saved_objects()
     if check or added_symbols != []:
-        print('[save]->saving...')
+        print('saving...')
         workbook_tools.save(added_symbols, commands_utils.get_date())
 
 def saveall() -> None:
     """Saves all fetched symbol data.
 
     Like save(), to find data, at least one fetch() call has is needed during program runtime."""
+    print('[saveall]->', end='')
     if FetchData.query_data == []:
             print('No data available to save. Fetch data before you attempt to save it.')
             return
-    print('[saveall]->saving all...')
+    print('saving all...')
     workbook_tools.save(FetchData.query_data, commands_utils.get_date())
     print('=>Following symbols were saved:\n')
     for sym in FetchData.query_data:
@@ -250,7 +250,8 @@ def print_query() -> None:
 def update_date_format() -> None:
     """Updates dates to current format."""
     first_row = input('Give a row number (>= 2) where updating starts. Base value is 2:'+
-                      ' for this, leave empty input.\n')
+                      ' for this, leave empty input.\n'
+                      '[update date]>>>')
     if first_row == '':
         workbook_tools.update_datetime(2)
     else:
@@ -264,9 +265,10 @@ def update_to_nums() -> None:
     
     To change selected columns, edit CUSTOM_HEADERS in query.py.
     """
-    verify = input('[update floats]-> This process can possible overwrite important data - make sure you have copied'
+    verify = input('This process can possible overwrite important data - make sure you have copied'
                    'your current workbook.\n'
-                   'To proceed, type "yes".\n =>')
+                   'To proceed, type "yes".\n'
+                   '[update nums]>>>')
     if verify.lower() == 'yes':
         workbook_tools.update_values_to_nums()
     else:
@@ -278,7 +280,7 @@ def export_wb() -> None:
                       'txt, csv, json\n'+
                       'Prererably use csv or json; txt aligns columns poorly.\n'+
                       '>type \'back\' to return to main ui.\n'+
-                      '[export_wb]-> ')
+                      '[export_wb]>>>')
     if file_type == 'back':
         print('Exporting of workbook contents halted.')
     else:
@@ -286,17 +288,23 @@ def export_wb() -> None:
 
 def show_txt() -> None:
     """Opens the symbol data text file."""
+    print(f"[txt]->displaying {FilePaths.TXT_NAME}.txt...")
     os.system(str(FilePaths.TXT_PATH))
 
 def show_xlsx() -> None:
     """Opens the main xlsx file."""
+    print(f"[excel]->displaying {FilePaths.wb_name}.xlsx...")
     os.system(str(FilePaths.wb_path))
     sheets.update_sheets()
+
+def remove_duplicate_data() -> None:
+    """Remove duplicate row data from workbook."""
+    workbook_tools.remove_duplicates()
 
 def copy() -> None:
     """Makes a hard copy of the current xlsx workbook file."""
     if input('Are you sure you want to make a hard copy? Type "yes" to copy, or anything else to leave.'
-             '\n=>').lower() == 'yes':
+             '\n[copy]>>>').lower() == 'yes':
         try:
             shutil.copy2(FilePaths.wb_path, FilePaths.wb_manual_copy_path)
             print('Copying was succesful.')
@@ -310,20 +318,22 @@ def create() -> None:
     workbook_tools.create_wb()
 
 def delete_workbook() -> None:
-    print("Select the workbook you'd like to delete permanently.")
+    """Deletes any existing workbook that is not currently in use."""
+    print("Select the workbook you'd like to *delete permanently*.")
     all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
     for f_name in all_workbooks[:]:
         if f_name.endswith(('.txt', '.json')) or f_name == '_default':
             all_workbooks.remove(f_name)
     for wb in all_workbooks:
         print(wb)
-    del_input = input("[delete wb]=>")
+    del_input = input("[delete wb]>>>")
     if del_input == FilePaths.wb_name:
         print("Cannot delete currently used workbook. Halting deletion process.")
         return
     if del_input in all_workbooks:
         confirm = input(f"Are you absolutely sure you'd wish to remove '{del_input}'?\n"
-                        "Type 'delete wb' to proceed, or anything else to halt deleting process.\n=>")
+                        "Type 'delete wb' to proceed, or anything else to halt deleting process.\n"
+                        "[delete wb]>>>")
         if confirm == 'delete wb':
             shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/del_input)
             print(f"Workbook '{del_input}' contents deleted succesfully!")
