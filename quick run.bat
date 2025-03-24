@@ -1,1 +1,0 @@
-python screenerfetch/main.py "fetch saveall copy"

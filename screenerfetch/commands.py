@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import shutil
 
 import requests
@@ -138,21 +139,33 @@ def update_query() -> None:
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
 
-def update_wb_file_name() -> None:
-    """Changes current workbook or creates a new one if it doesn't already exist."""
-    all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
-    for f_name in all_workbooks[:]:
-        if f_name.endswith(('.txt', '.json')) or f_name == '_default':
-            all_workbooks.remove(f_name)
-    print("--Non-empty input to select/create workbook, empty input to exit--\n"
-            f">Current: {FilePaths.wb_name}\n"
-                        "Existing workbooks:\n"
-                        "====================")
-    for wb in all_workbooks:
-        print(wb)
-    name_input = input("====================\n[change wb]>>>")
-    if len(name_input) == 0:
-        print('Name cannot be empty.')
+def update_wb_file_name(select_wb: list[str] = []) -> None:
+    """Changes current workbook or creates a new one if it doesn't already exist.
+    
+    Args:
+        select_wb: Workbook name. This variable should only be passed if screenerfetch is passed command line arguments. For this reason, it also has type list[str] instead of str.
+    """
+    name_input: str | list[str] = []
+    if select_wb != []:
+        name_input = select_wb[0]
+    else:
+        all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
+        for f_name in all_workbooks[:]:
+            if f_name.endswith(('.txt', '.json')) or f_name == '_default':
+                all_workbooks.remove(f_name)
+        print("--Non-empty input to select/create workbook, empty input to exit--\n"
+                f">Current: {FilePaths.wb_name}\n"
+                            "Existing workbooks:\n"
+                            "====================")
+        for wb in all_workbooks:
+            print(wb)
+        name_input = input("====================\n[change wb]>>>")
+    invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
+    if len(name_input) == 0 or len(name_input.strip()) == 0:
+        print('Workbook name cannot be empty.')
+    elif len(invalid_chars.findall(name_input)) > 0:
+        print('Workbook name cannot contain following characters:\n'
+              r'''#%&{}\/<>*?$!'":@+´'¨`|=''')
     else:
         with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
             wb_fname = json.load(f)
@@ -272,7 +285,7 @@ def export_wb() -> None:
     """Exports current workbook data and saves it in selected type."""
     file_type = input('Enter a file type from the following list:\n'
                       'txt, csv, json\n'+
-                      'Prererably use csv or json; txt aligns columns poorly.\n'+
+                      'You can also select \'all\' to create all files.\n'+
                       '>type \'back\' to return to main ui.\n'+
                       '[export_wb]>>>')
     if file_type == 'back':

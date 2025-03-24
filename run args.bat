@@ -1,0 +1,1 @@
+python screenerfetch/main.py -f -a -c
