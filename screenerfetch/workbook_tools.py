@@ -158,7 +158,7 @@ def export_wb(type: str) -> None:
     """Exports workbook data to specific format'.
     
     Args:
-        type: File format - 'txt', 'csv' or 'json'.
+        type: File format - 'txt', 'csv' or 'json'. Can also pass 'all' to export all supported file types.
     """
     df = pd.read_excel(FilePaths.wb_path, sheets.WorkbookSheetNames.sheet_names[0])
     if type == 'txt': 
@@ -167,10 +167,16 @@ def export_wb(type: str) -> None:
         df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.csv'), index=False)
     elif type == 'json':
         df.to_json(FilePaths.data_path/str(FilePaths.wb_name+'.json'), indent=1)
+    elif type == 'all':
+        df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.txt'), sep='\t', index=False)
+        df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.csv'), index=False)
+        df.to_json(FilePaths.data_path/str(FilePaths.wb_name+'.json'), indent=1)
+        print(f"Created txt, csv and json files in {FilePaths.wb_name}/data.")
+        return
     else:
         print("Invalid file type.")
         return
-    print(f'{FilePaths.wb_name}.'+type+' created.')
+    print(f'{FilePaths.wb_name}.'+type+f' created in {FilePaths.wb_name}/data folder.')
 
 def remove_duplicates() -> None:
     """Remove duplicate rows from current .xlsx file.
