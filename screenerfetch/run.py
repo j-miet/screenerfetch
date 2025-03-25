@@ -30,12 +30,19 @@ def _initialize_workbook() -> None:
 
 def execute_args_commands() -> None:
     """Runs commands based on passed command-line arguments and closes.
-    
+
     Use 'py main.py -h' to see possible arguments.
+
+    Arguments are processed in order. Flag -h is always read first and will only display help, ignoring further flags.  
+    For the rest, order is left to right:
+    -wb, -f, -s, -sa, -c, --export  
+    This means writing 'py main.py -f -c --export -sa' does -f -> -sa -> -c -> --export.
     """
     _initialize_workbook()
     print(f"# Current workbook: {FilePaths.wb_name}")
     parser = argparse.ArgumentParser("main.py")
+    parser.add_argument("-wb", "--change-wb", nargs=1, type=str,
+                         help="change to another existing workbook or create a new one")
     parser.add_argument("-f", "--fetch", action='store_true',
                          help="fetch data from Tradingview API based on your current "
                          f"{FilePaths.wb_name}/data/query.txt."
@@ -47,17 +54,16 @@ def execute_args_commands() -> None:
     parser.add_argument("-a", "--saveall", action='store_true',
                          help="save all fetched data in .xlsx file. Saving is possible only after "
                          "data has been fetched with -f/--fetch")
-    parser.add_argument("-wb", "--change-wb", nargs=1, type=str,
-                         help="change to another existing workbook or create a new one")
     parser.add_argument("-c", "--autocopy", action='store_true',
-                         help=f"makes automatic copy of {FilePaths.wb_name}.xlsx. Copy is named as "
-                         f"{FilePaths.wb_autocopy_name}.xlsx. "
-                          f"Won't overwrite tmanual copy file {FilePaths.wb_manual_copy_name}.xlsx.")
+                         help=f"makes/overwrites automatic copy of {FilePaths.wb_name}.xlsx. Copy is named as "
+                         f"{FilePaths.wb_autocopy_name}.xlsx.")
     parser.add_argument("--export", const='all', nargs='?', type=str,
                          help="export workbook data into specified data format: 'csv', 'txt', 'json'. "
-                         f"Default value 'all' creates all files in {FilePaths.wb_name}/data")
+                         f"Default value 'all' creates all files at {FilePaths.wb_name}/data")
     args = parser.parse_args()
     
+    if args.change_wb:
+        commands.update_wb_file_name(args.change_wb)
     if args.fetch:
         commands.fetch()
     if args.save:
@@ -68,8 +74,6 @@ def execute_args_commands() -> None:
         shutil.copy2(FilePaths.wb_path, FilePaths.wb_autocopy_path)
     if args.export:
         workbook_tools.export_wb(args.export)
-    if args.change_wb:
-        commands.update_wb_file_name(args.change_wb)
 
 def open_cli() -> None:
     """Opens command line interface."""

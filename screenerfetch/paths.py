@@ -8,11 +8,11 @@ class FilePaths:
     WB_FILES_ROOT_PATH = PATH/'workbooks'
 
     wb_name: str
+    wb_autocopy_name: str
+    wb_manual_copy_name: str
     wb_files_path: Path
     data_path: Path
     settings_path: Path
-    wb_autocopy_name: Path
-    wb_manual_copy_name: Path
     wb_path: Path
     wb_autocopy_path: Path
     wb_manual_copy_path: Path
