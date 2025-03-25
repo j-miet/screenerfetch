@@ -3,7 +3,6 @@
 import argparse
 import json
 import shutil
-import sys
 
 import commands
 import custom.c_commands
