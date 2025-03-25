@@ -32,7 +32,12 @@ def test_get_column_header_data():
 
 @pytest.fixture
 def query_vars():
-    return QueryVars()
+    """Creates a fixture of QueryVars class. 
+    
+    Very important to return QueryVars, not QueryVars(). Latter calls the default constructor and would create a class 
+    instance instead.
+    """
+    return QueryVars
 
 @pytest.fixture
 def file_paths():
@@ -47,7 +52,7 @@ def test_update_query_variables(mocker, query_vars, file_paths):
         "market": "america",
         "headers": helper_data.custom_headers_test,
         "query": helper_data.my_query_test}
-    QueryVars.update_query_variables()
+    query_vars.update_query_variables()
     
     assert query_vars.market == mock_json_load.return_value["market"]
     assert query_vars.url == 'https://scanner.tradingview.com/america/scan'

@@ -4,14 +4,16 @@ import pytest
 
 from paths import FilePaths
 
-@pytest.fixture
+def test_text_path():
+    assert FilePaths.TXT_PATH == FilePaths.WB_FILES_ROOT_PATH/f'{FilePaths.TXT_NAME}.txt'
+
+@pytest.fixture()
 def file_paths():
     return FilePaths
 
 def test_update_filepaths(file_paths):
     file_paths.wb_name = 'test_name'
-    assert file_paths.TXT_PATH == file_paths.WB_FILES_ROOT_PATH/f'{file_paths.TXT_NAME}.txt'
-    FilePaths.update_filepaths()
+    file_paths.update_filepaths()
 
     assert file_paths.wb_files_path == file_paths.PATH/'workbooks'/file_paths.wb_name
     assert file_paths.data_path == file_paths.wb_files_path/'data'
