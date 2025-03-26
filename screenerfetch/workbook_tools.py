@@ -3,6 +3,7 @@
 import copy
 import datetime
 import json
+import os
 
 import openpyxl
 from openpyxl.styles import Font, Alignment, NamedStyle
@@ -10,7 +11,36 @@ import pandas as pd
 
 from paths import FilePaths
 from query import QueryVars
-import sheets
+from sheets import WorkbookSheets
+
+def _create_workbook_files() -> None:
+    try:
+        for folder_path in (FilePaths.wb_files_path, FilePaths.data_path, FilePaths.settings_path):
+            os.mkdir(folder_path)
+        print(f"{FilePaths.wb_name}, {FilePaths.wb_name}/settings and {FilePaths.wb_name}/data created.")
+    except FileExistsError:
+        ...
+    with open(FilePaths.settings_path/'settings.json', 'w') as sf:
+            set_settings = {"type": "basic", 
+                            "market": "global",
+                            "headers": {},
+                            "query": {"columns": ["name"], "range": [0,1]}
+            }
+            json.dump(set_settings, sf, indent=4)
+    print(f"{FilePaths.wb_name}/settings/settings.json created.")
+    with open(FilePaths.settings_path/'query.txt', 'w') as qf:
+        qf.writelines(('{\n', 
+                       '    "columns": ["name"],\n', 
+                       '    "range": [0,1]\n', 
+                       '}'
+                       ))
+    print(f"{FilePaths.wb_name}/settings/query.txt created")
+    with open(FilePaths.settings_path/'headers.txt', 'w') as hf:
+        hf.writelines(('{\n', 
+                       '   {}', 
+                       '\n}'
+                       ))
+    print(f"{FilePaths.wb_name}/settings/headers.txt created.")
 
 def get_last_row(sheet_name: str) -> int:
     """Returns the last non-empty row index of main worksheet.
@@ -40,7 +70,7 @@ def check_date(date_str: str) -> bool:
         A boolean.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    ws = wb[WorkbookSheets.sheet_names[0]]
     for date in ws['A']:
         if date_str == str(date.value).replace(' 00:00:00', ''):
             return True
@@ -65,10 +95,10 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
     AUTO_UPDATE_NUMS = True
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    ws = wb[WorkbookSheets.sheet_names[0]]
     if ws is not None:
         d, m, y = date_str.split('/')
-        starting_row = get_last_row(sheets.WorkbookSheetNames.sheet_names[0])+1
+        starting_row = get_last_row(WorkbookSheets.sheet_names[0])+1
         next_row = starting_row
         full_data = copy.deepcopy(symbol_data)
         for row in full_data:
@@ -107,9 +137,9 @@ def update_values_to_nums(start_row: int = 2) -> None:
     xlsx_float_columns = QueryVars.sheet_xlsx_float_cols
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    ws = wb[WorkbookSheets.sheet_names[0]]
     if ws is not None:
-        for r in range(start_row, get_last_row(sheets.WorkbookSheetNames.sheet_names[0])+1):
+        for r in range(start_row, get_last_row(WorkbookSheets.sheet_names[0])+1):
             for f_col in range(len(float_columns)):
                 try:
                     ws[float_columns[f_col][0]+str(r)] = (
@@ -143,10 +173,10 @@ def update_datetime(first_row: int) -> None:
         first_row: Row number where updating begins. Is always >= 2 as row 1 points to headers.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    ws = wb[WorkbookSheets.sheet_names[0]]
     if ws is not None:
         if isinstance(first_row, int) and first_row >= 2:
-            for i in range(first_row, get_last_row(sheets.WorkbookSheetNames.sheet_names[0])+1):
+            for i in range(first_row, get_last_row(WorkbookSheets.sheet_names[0])+1):
                 ws.cell(row=i, column=1).style = "datetime"
                 ws.cell(row=i, column=1).alignment = Alignment(horizontal='left')            
             wb.save(FilePaths.wb_path)
@@ -160,7 +190,7 @@ def export_wb(type: str) -> None:
     Args:
         type: File format - 'txt', 'csv' or 'json'. Can also pass 'all' to export all supported file types.
     """
-    df = pd.read_excel(FilePaths.wb_path, sheets.WorkbookSheetNames.sheet_names[0])
+    df = pd.read_excel(FilePaths.wb_path, WorkbookSheets.sheet_names[0])
     if type == 'txt': 
         df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.txt'), sep='\t', index=False)
     elif type == 'csv':
@@ -184,7 +214,7 @@ def remove_duplicates() -> None:
     Uses date and symbol name to differentiate rows: one symbol cannot exists twice on same day.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    ws = wb[WorkbookSheets.sheet_names[0]]
     counter = 0
     if ws is not None:
         for row in reversed(list(ws.iter_rows(min_row=2, min_col=1, max_col=2))):
@@ -215,6 +245,9 @@ def create_wb() -> None:
     Args:
         wb_type: Either 'basic' for data-only workbook, or 'custom' for user-customized workbook template.
     """    
+    FilePaths.update_filepaths()
+    _create_workbook_files()
+    QueryVars.update_query_variables()
     wb = openpyxl.Workbook()
     ws_data = wb.active
     if ws_data is not None:
@@ -232,14 +265,5 @@ def create_wb() -> None:
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
 
-        with open(FilePaths.settings_path/'settings.json', 'w') as f:
-            set_settings = {"status": "basic", 
-                            "market": "global",
-                            "headers": {},
-                            "query": {"columns": ["name"], "range": [0,1]}
-            }
-            json.dump(set_settings, f, indent=4)
-
         print(f"New workbook {FilePaths.wb_name}.xlsx created.")
-        sheets.update_sheets()
-        return
+        WorkbookSheets.update_sheets()
