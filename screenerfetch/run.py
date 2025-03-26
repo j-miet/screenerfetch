@@ -6,11 +6,13 @@ import shutil
 
 import commands
 import custom
+import custom.small_cap1.c_commands
+import custom.small_cap1.c_workbook_tools
 from paths import FilePaths
 from query import QueryVars
 from sheets import WorkbookSheets
-# custom workbooks
-import custom.small_cap1.c_commands
+# put custom workbook packages here
+import custom.small_cap1
 #
 
 def _custom_create(wb_type: str) -> None:
@@ -19,20 +21,22 @@ def _custom_create(wb_type: str) -> None:
     Args:
         wb_type: Workbook type.
     """
-    # Add workbook creation command of custom package here
-    if wb_type == 'basic':
-        commands.create()
-    if wb_type == 'small_cap1':
-        custom.small_cap1.c_commands.c_workbook_tools.create_custom_wb()
+    # Add workbook creation command of any custom package here
+    match wb_type:
+        case 'basic':
+            commands.create()
+        case 'small_cap1':
+            custom.small_cap1.c_workbook_tools.create_custom_wb()
 
 def _select_custom_package() -> None:
     """Selects current custom package based on settings.json "type" value."""
     with open(FilePaths.settings_path/'settings.json') as f:
         wb_type = json.load(f)["type"]
     if wb_type in os.listdir(FilePaths.PATH/'custom'):
-        # add open interface command for custom package here
+        # add interface access command for any custom package here
         if wb_type == 'small_cap1':
             custom.small_cap1.c_commands.select_custom_command()
+        #
         return
     print(f"Unsupported custom package type '{wb_type}'.")
 
