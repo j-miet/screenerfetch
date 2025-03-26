@@ -1,21 +1,4 @@
 """Data plotting functions for custom workbooks.
-
-These functions only work for current custom query, unless yours happens to share similar columns. Currently, it means you need the following column names & my_query columns:  
-
-_________________________  
-'Date'  (nothing, not part of my_query - will always be first column, automatically)  
-'Symbol' ('name')  
-'Low' ('low')  
-'High' ('high')  
-'Price' ('close')  
-'Open' ('open')  
-'Float' ('float_shares_outstanding_current')  
-'Volume' ('volume' )  
-'Market Cap' ('market_cap_basic')  
-'Pre-market Open' ('premarket_open')  
-'Chg from Open %' ('change_from_open')
-
--Left is the custom column name, right the actual Tradingview API column name.
 """
 
 from collections import namedtuple
@@ -31,6 +14,17 @@ from paths import FilePaths
 
 # Style values https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html
 STYLE = 'dark_background'
+
+def check_if_empty() -> bool:
+    """Checks if current workbook has any non-header data in it.
+    
+    Returns:
+        True if data was found, False if not.
+    """
+    df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Date'])
+    if len(df.index) == 0:
+        return True
+    return False
 
 def show_daily_average_candles() -> None:
     """Display daily average candle of all symbols.

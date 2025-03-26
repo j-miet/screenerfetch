@@ -103,7 +103,7 @@ def create_screener_data(df_string: list[str]) -> list[list[str]]:
 
     Saving process:
         String data is split into sublists containing data for each symbol, and all of these lists are then stored 
-        inside the variable list. This variable is used with 'save all' and 'save' commands to locate, verify and save 
+        inside the variable list. This variable is used with 'saveall' and 'save' commands to locate, verify and save 
         valid data rows into an excel workbook.
 
     Args:

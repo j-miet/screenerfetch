@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 
 import commands_utils
-import query
 from query import QueryVars, FetchData
 import helpers.helper_data as helper_data
 
@@ -31,7 +30,7 @@ def test_round_to_int(float_val: float, int_val: int):
     "name", "open", "close", "low", "high", "volume", "float_shares_outstanding_current", "market_cap_basic"
 ])
 def test_clean_fetched_data(column: str):
-    QueryVars.col_headers, QueryVars.int_cols, _ = query.get_column_header_data(helper_data.actual_columns_test,
+    QueryVars.col_headers, QueryVars.int_cols, _ = QueryVars.get_column_header_data(helper_data.actual_columns_test,
                                                         {}, 
                                                         helper_data. header_chars_test)
     first_col = [header[0] for header in QueryVars.col_headers.keys()][1]
@@ -61,7 +60,7 @@ def test_clean_fetched_data(column: str):
     "Symbol", "open", "close", "low", "High", "volume", "Float", "Market Cap"
 ])
 def test_clean_fetched_data_custom_headers(column: str):
-    QueryVars.col_headers, QueryVars.int_cols, _ = query.get_column_header_data(helper_data.actual_columns_test,
+    QueryVars.col_headers, QueryVars.int_cols, _ = QueryVars.get_column_header_data(helper_data.actual_columns_test,
                                                         helper_data.custom_headers_test, 
                                                         helper_data. header_chars_test)
     first_col = [header[0] for header in QueryVars.col_headers.keys()][1]
@@ -96,7 +95,7 @@ def test_create_fetch_display_txt(mocker):
     assert mock_write.call_count == 2
 
 def test_create_screener_data():
-    QueryVars.col_headers, QueryVars.int_cols, _ = query.get_column_header_data(helper_data.actual_columns_test,
+    QueryVars.col_headers, QueryVars.int_cols, _ = QueryVars.get_column_header_data(helper_data.actual_columns_test,
                                                         {}, 
                                                         helper_data. header_chars_test)
     first_col = [header[0] for header in QueryVars.col_headers.keys()][1]

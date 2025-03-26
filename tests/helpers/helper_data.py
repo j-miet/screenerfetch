@@ -1,6 +1,6 @@
 """Mock query data for unit testing."""
 
-import query
+from query import QueryVars
 
 my_query_test = {
     'markets': ['america'],
@@ -58,7 +58,7 @@ custom_headers_test = {
     'H' : {'name': 'Float'},
     'I' : {'name': 'Market Cap', 'type': 'int'}
 }
-actual_columns_test = query.get_actual_column_values(my_query_test['columns']) # type: ignore
+actual_columns_test = QueryVars.get_actual_column_values(my_query_test['columns']) # type: ignore
 header_chars_test = [f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(actual_columns_test)+1)))]
 
 saved_query_data = [

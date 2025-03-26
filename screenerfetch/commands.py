@@ -9,31 +9,9 @@ import requests
 
 import commands_utils
 from paths import FilePaths
-import query
 from query import QueryVars, FetchData
-import sheets
+from sheets import WorkbookSheets
 import workbook_tools
-
-def _create_workbook_files() -> None:
-    for folder_path in (FilePaths.wb_files_path, FilePaths.data_path, FilePaths.settings_path):
-        os.mkdir(folder_path)
-    print(f"{FilePaths.wb_name}, {FilePaths.wb_name}/settings and {FilePaths.wb_name}/data created.")
-    with open(FilePaths.settings_path/'settings.json', 'w') as sjson:
-        json.dump({"headers": {}, "market": "global", "query": {"columns": ["name"]}}, sjson, indent=4)
-    print(f"{FilePaths.wb_name}/settings/settings.json created.")
-    with open(FilePaths.settings_path/'query.txt', 'w') as qf:
-        qf.writelines(('{\n', 
-                       '    "columns": ["name"],\n', 
-                       '    "range": [0,1]\n', 
-                       '}'
-                       ))
-    print(f"{FilePaths.wb_name}/settings/query.txt created")
-    with open(FilePaths.settings_path/'headers.txt', 'w') as hf:
-        hf.writelines(('{\n', 
-                       '   {}', 
-                       '\n}'
-                       ))
-    print(f"{FilePaths.wb_name}/settings/headers.txt created.")
 
 def update_query() -> None:
     """Handles query-related updates using text and json files.
@@ -90,7 +68,7 @@ def update_query() -> None:
     while True:
         user_input = input('[update query]>>>')
         if user_input == 'back':
-            query.update_query_variables()
+            QueryVars.update_query_variables()
             print('Query values updated.')
             return  
         
@@ -143,7 +121,8 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
     """Changes current workbook or creates a new one if it doesn't already exist.
     
     Args:
-        select_wb: Workbook name. This variable should only be passed if screenerfetch is passed command line arguments. For this reason, it also has type list[str] instead of str.
+        select_wb: Workbook name. This variable should only be passed if screenerfetch is passed command line 
+        arguments. For this reason, it also has type list[str] instead of str.
     """
     name_input: str | list[str] = []
     if select_wb != []:
@@ -181,8 +160,8 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
                     FilePaths.wb_name = name_input
                     print(f"Workbook '{name_input}' selected.")
                     FilePaths.update_filepaths()
-                    query.update_query_variables()
-                    sheets.update_sheets()
+                    QueryVars.update_query_variables()
+                    WorkbookSheets.update_sheets()
                     return
         new_wb = input(f"Did not find workbook named '{name_input}'. Would you like to create one?\n"
                        f"Folder 'workbooks/{name_input}' with necessary subfolders and files will be created "
@@ -193,13 +172,9 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
             with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
                 json.dump(wb_fname, f, indent=4)
             FilePaths.wb_name = name_input
-            FilePaths.update_filepaths()
             print("Creating new folder structure under workbooks...")
-            _create_workbook_files()
-            query.update_query_variables()
             create()
-            sheets.update_sheets()
-            print(f"Workbook '{name_input}' is now available and currently selected.")
+            print(f"Workbook '{name_input}' with type 'basic' created and selected.")
         else:
             return
 
@@ -302,7 +277,7 @@ def show_xlsx() -> None:
     """Opens the main xlsx file."""
     print(f"[excel]->displaying {FilePaths.wb_name}.xlsx...")
     os.system(str(FilePaths.wb_path))
-    sheets.update_sheets()
+    WorkbookSheets.update_sheets()
 
 def remove_duplicate_data() -> None:
     """Remove duplicate row data from workbook."""
