@@ -2,14 +2,34 @@
 
 import datetime
 import json
+import os
 
 import openpyxl
 from openpyxl.styles import Alignment, Font, NamedStyle
 
 from paths import FilePaths
 from query import QueryVars
-import sheets
+from custom.small_cap1.settings import SmallCap1Values
+from sheets import WorkbookSheets
 from workbook_tools import get_last_row
+
+def _create_custom_workbook_files() -> None:
+    try:
+        for folder_path in (FilePaths.wb_files_path, FilePaths.data_path, FilePaths.settings_path):
+            os.mkdir(folder_path)
+        print(f"{FilePaths.wb_name}, {FilePaths.wb_name}/settings and {FilePaths.wb_name}/data created.")
+    except FileExistsError:
+        ...
+    with open(FilePaths.settings_path/'settings.json', 'w') as f:
+            set_settings = SmallCap1Values.SETTINGS
+            json.dump(set_settings, f, indent=4)
+    print(f"{FilePaths.wb_name}/settings/settings.json created.")
+    with open(FilePaths.settings_path/'query.txt', 'w') as qf:
+        qf.writelines(SmallCap1Values.QUERY)
+    print(f"{FilePaths.wb_name}/settings/query.txt created")
+    with open(FilePaths.settings_path/'headers.txt', 'w') as hf:
+        hf.writelines(SmallCap1Values.HEADERS)
+    print(f"{FilePaths.wb_name}/settings/headers.txt created.")
 
 def add_row_in_sheet2(input_str: str) -> None:
     """Add a custom row for a symbol in the second worksheet.
@@ -22,7 +42,7 @@ def add_row_in_sheet2(input_str: str) -> None:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[0]]
+    ws = wb[WorkbookSheets.sheet_names[0]]
     if ws is not None:
         symbol, date = input_str.split()
         raw_date = date.split('-')
@@ -31,8 +51,8 @@ def add_row_in_sheet2(input_str: str) -> None:
         for sym in ws['B']:
             if sym.value == symbol:
                 if ws.cell(row=sym.row, column=1).value.date() == date_datetime.date(): # type: ignore              
-                    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
-                    next_row = get_last_row(sheets.WorkbookSheetNames.sheet_names[1])+1
+                    ws = wb[WorkbookSheets.sheet_names[1]]
+                    next_row = get_last_row(WorkbookSheets.sheet_names[1])+1
                     ws.cell(column=1, row=next_row).value = date_datetime.date()
                     current = ws.cell(column=1, row=next_row)
                     current.alignment = Alignment(horizontal='left')
@@ -41,7 +61,7 @@ def add_row_in_sheet2(input_str: str) -> None:
                     current.alignment = Alignment(horizontal='right')
 
                     wb.save(FilePaths.wb_path)
-                    print(f'Row for {symbol, date} added to sheet {sheets.WorkbookSheetNames.sheet_names[1]}.')
+                    print(f'Row for {symbol, date} added to sheet {WorkbookSheets.sheet_names[1]}.')
                     return
     print('Failed to find cells corresponding to input data.')
 
@@ -56,7 +76,7 @@ def edit_notes(input_str: str) -> None:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
+    ws = wb[WorkbookSheets.sheet_names[1]]
     if ws is not None:
         symbol, date = input_str.split()
         raw_date = date.split('-')
@@ -69,7 +89,7 @@ def edit_notes(input_str: str) -> None:
                     ws.cell(row=sym.row, column=3, value=notes) # remember to update column if location changes.
                     ws.cell(row=sym.row, column=3, value=notes).alignment = Alignment(horizontal='right')
                     wb.save(FilePaths.wb_path)
-                    print(f'Notes for {symbol, date} updated in sheet {sheets.WorkbookSheetNames.sheet_names[1]}.')
+                    print(f'Notes for {symbol, date} updated in sheet {WorkbookSheets.sheet_names[1]}.')
                     return
     print('Failed to find cells corresponding to input data.')
 
@@ -84,7 +104,7 @@ def add_image_hyperlinks(input_str: str) -> None:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
+    ws = wb[WorkbookSheets.sheet_names[1]]
     if ws is not None:
         symbol, date = input_str.split()
         raw_date = date.split('-')
@@ -111,9 +131,9 @@ def add_image_hyperlinks(input_str: str) -> None:
 def custom_update_datetime() -> None:
     """Update datetime on second sheet."""
     wb = openpyxl.load_workbook(FilePaths.wb_path)
-    ws = wb[sheets.WorkbookSheetNames.sheet_names[1]]
+    ws = wb[WorkbookSheets.sheet_names[1]]
     if ws is not None:
-        for i in range(2, get_last_row(sheets.WorkbookSheetNames.sheet_names[1])+1):
+        for i in range(2, get_last_row(WorkbookSheets.sheet_names[1])+1):
             ws.cell(row=i, column=1).style = "datetime"
             ws.cell(row=i, column=1).alignment = Alignment(horizontal='left')          
             wb.save(FilePaths.wb_path)
@@ -121,6 +141,9 @@ def custom_update_datetime() -> None:
 
 def create_custom_wb() -> None:
     """Create custom workbook. Will overwrite contents of currently existing wb with same name."""
+    FilePaths.update_filepaths()
+    _create_custom_workbook_files()
+    QueryVars.update_query_variables()
     wb = openpyxl.Workbook()
     ws_data = wb.active
     if ws_data is not None:
@@ -154,14 +177,4 @@ def create_custom_wb() -> None:
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
 
-        with open(FilePaths.settings_path/'settings.json', 'w') as f:
-            set_settings = {"status": "custom", 
-                            "market": "global",
-                            "headers": {},
-                            "query": {"columns": ["name"], "range": [0,1]}
-            }
-            json.dump(set_settings, f, indent=4)
-
-        print(f"New custom workbook {FilePaths.wb_name}.xlsx created.")
-        sheets.update_sheets()
-        return
+        WorkbookSheets.update_sheets()

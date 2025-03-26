@@ -1,0 +1,102 @@
+"""Contains SmallCap1Values class."""
+
+class SmallCap1Values:
+    """Initialization values for small_cap1 type workbooks."""
+    SETTINGS = {
+                "type": "small_cap1", 
+                "market": "america",
+                "headers": {
+                    "A": {"name": "Date"},
+                    "B": {"name": "Symbol"},
+                    "C": {"name": "Open", "type": "float"},
+                    "D": {"name": "Price", "type": "float"},
+                    "E": {"name": "Low", "type": "float"},
+                    "F": {"name": "High", "type": "float"},
+                    "G": {"name": "Chg from Open %", "type": "float"},
+                    "H": {"name": "Change %", "type": "float"},
+                    "I": {"name": "Volume", "type": "int"},
+                    "J": {"name": "Float", "type": "int"},
+                    "K": {"name": "Market Cap", "type": "int"},
+                    "L": {"name": "Pre-market Open", "type": "float"},
+                    "M": {"name": "Pre-market Close", "type": "float"},
+                    "N": {"name": "Pre-market Chg %", "type": "float"},
+                    "O": {"name": "Pre-market Vol", "type": "int"}
+                },
+                "query": {
+                    "markets": ["america"],
+                    "options": {"lang": "en"},
+                    "columns": [
+                        "name",
+                        "open",
+                        "close",
+                        "low",
+                        "high",
+                        "change_from_open",
+                        "change",
+                        "volume",
+                        "float_shares_outstanding_current",
+                        "market_cap_basic",
+                        "premarket_open",
+                        "premarket_close",
+                        "premarket_change",
+                        "premarket_volume"],
+                    "filter": [
+                        {"left": "premarket_change", "operation": "greater", "right": 7},
+                        {"left": "premarket_volume", "operation": "greater", "right": 250000},
+                        {"left": "premarket_close", "operation": "less", "right": 20},
+                        {"left": "typespecs", "operation": "has", "right": ["common"]},
+                        {"left": "exchange", "operation": "in_range", "right": ["AMEX","NYSE","NASDAQ"]}
+                        ],
+                    "sort": {"sortBy": "premarket_change", "sortOrder": "desc"},
+                    "range": [0,75]
+                },
+    }
+    QUERY = (
+            '{\n',
+            '   "markets": ["america"],\n',
+            '   "options": {"lang": "en"},\n',
+            '   "columns": [\n',
+            '       "name",\n',
+            '       "open",\n',
+            '       "close",\n',
+            '       "low",\n',
+            '       "high",\n',
+            '       "change_from_open",\n',
+            '       "change",\n',
+            '       "volume",\n',
+            '       "float_shares_outstanding_current",\n',
+            '       "market_cap_basic",\n',
+            '       "premarket_open",\n',
+            '       "premarket_close",\n',
+            '       "premarket_change",\n',
+            '       "premarket_volume"],\n',
+            '   "filter": [\n',
+            '       {"left": "premarket_change", "operation": "greater", "right": 7},\n',
+            '       {"left": "premarket_volume", "operation": "greater", "right": 250000},\n',
+            '       {"left": "premarket_close", "operation": "less", "right": 20},\n',
+            '       {"left": "typespecs", "operation": "has", "right": ["common"]},\n',
+            '       {"left": "exchange", "operation": "in_range", "right": ["AMEX","NYSE","NASDAQ"]}\n',
+            '       ],\n',
+            '   "sort": {"sortBy": "premarket_change", "sortOrder": "desc"},\n',
+            '   "range": [0,75],\n',
+            '}'
+    )
+    HEADERS = (
+                '{\n', 
+                '   "A": {"name": "Date"},\n',
+                '   "B": {"name": "Symbol"},\n',
+                '   "C": {"name": "Open", "type": "float"},\n',
+                '   "D": {"name": "Price", "type": "float"},\n',
+                '   "E": {"name": "Low", "type": "float"},\n',
+                '   "F": {"name": "High", "type": "float"},\n',
+                '   "G": {"name": "Chg from Open %", "type": "float"},\n',
+                '   "H": {"name": "Change %", "type": "float"},\n',
+                '   "I": {"name": "Volume", "type": "int"},\n',
+                '   "J": {"name": "Float", "type": "int"},\n',
+                '   "K": {"name": "Market Cap", "type": "int"},\n',
+                '   "L": {"name": "Pre-market Open", "type": "float"},\n',
+                '   "M": {"name": "Pre-market Close", "type": "float"},\n',
+                '   "N": {"name": "Pre-market Chg %", "type": "float"},\n',
+                '   "O": {"name": "Pre-market Vol", "type": "int"}\n',
+                '}'
+    )

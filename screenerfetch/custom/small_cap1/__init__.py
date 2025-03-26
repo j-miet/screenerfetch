@@ -1,0 +1,1 @@
+"""Custom workbook implementation for a simple small cap stocks query."""
