@@ -1,0 +1,1 @@
+python screenerfetch -f -a -c

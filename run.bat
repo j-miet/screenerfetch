@@ -1,1 +1,1 @@
-python screenerfetch/main.py
+python screenerfetch
