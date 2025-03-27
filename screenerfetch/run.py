@@ -89,7 +89,7 @@ def open_cli() -> None:
         "help => how to get started.\n"
         "commands => displays all basic commands available.\n"
         "wb/change wb => change current workbook. Is also used in creating new ones. You can see your currently "
-        "selected workbook on CLI as 'WB=...'\n"
+            "selected workbook on CLI as 'WB=...'\n"
         "q/update query => update query data, market and (optional) custom header values.\n"
         "f/fetch => fetch data from TradingView API based on query.MY_QUERY.\n"
         f"s/save => shows fetched data by opening data/{FilePaths.TXT_NAME}.txt. Add '+' in front of each symbol "+
@@ -104,7 +104,6 @@ def open_cli() -> None:
         f"exit => close the program and copy current {FilePaths.wb_name}.xlsx data "
                 f"into '{FilePaths.wb_autocopy_name}.xlsx'; replaces previous copy.\n"
         "print => prints current MY_QUERY contents.\n"
-
         f"FORMAT WB => overwrites current {FilePaths.wb_name}.xlsx. Fresh workbook has only column headers defined.\n"
         "\t     This preserves all settings files - so change those with 'update query' command, then format \n"
         "\t     afterwards if you need to update columns in xlsx files.\n"

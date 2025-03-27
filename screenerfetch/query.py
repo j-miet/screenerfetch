@@ -66,9 +66,9 @@ custom_headers = {
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 import copy
 import json
+from typing import TYPE_CHECKING
 
 from paths import FilePaths
 

@@ -1,13 +1,20 @@
-"""Utility functions for commands.py."""
+"""All major logic behind commands.py."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from datetime import date
+import json
+import os
+import re
+import shutil
+from typing import TYPE_CHECKING
 
 import pandas as pd
+import requests
 
 from query import QueryVars, FetchData
 from paths import FilePaths
+from sheets import WorkbookSheets 
+import workbook_tools
 
 if TYPE_CHECKING:
     from typing import Any
@@ -35,8 +42,22 @@ def round_to_int(value: float | None) -> int | str:
     else:
         return '-'
 
+def requests_api_data() -> dict[str, Any]:
+    """Request data from Tradingview API based on current settings.json values.
+    
+    Both query and received data are in JSON-supported dictionary objects.
+    """
+    try:
+        request_data_json = requests.post(url=QueryVars.url, 
+                                        json=QueryVars.my_query, 
+                                        headers=FetchData.REQUEST_HEADERS).json()
+        return request_data_json
+    except requests.exceptions.JSONDecodeError:
+        print("\n*Could not find data for currently selected market*")
+        return {}
+
 def clean_fetched_data(request_data: dict[str, Any]) -> pd.DataFrame:
-    """Cleans fetched API data and saves it for utilization.
+    """Cleans fetched API data, updates numeric types for columns, and saves it for utilization.
 
     Request JSON data has two components: 'totalCount' and 'data'.
     'totalCount' lists total amount of row elements (= symbols) that request found.
@@ -44,6 +65,11 @@ def clean_fetched_data(request_data: dict[str, Any]) -> pd.DataFrame:
         's' contains a ticker symbol with market/exchange included in front e.g. 'NASDAQ: NVDA'.
         'd' contains all data columns, filtered accordingly to your query, in a list-like format. It preserves order of 
         columns from MY_QUERY so you can easily pinpoint which value corresponds to which.
+
+    Any float-type value is rounded to 2 decimals with column:.2f. This also means they get converted to strings. 
+    As pandas has only types int64, float64 and object, it means dataframe has types int64 for integers or object for 
+    anything else.
+    Rounding will also save zero digits: e.g. 100.001 becomes 100.00, 100.999 becomes 101.00.
 
     Args:
         request_data: JSON data from TradingView API.
@@ -168,3 +194,123 @@ def select_saved_objects() -> tuple[bool, list[list[str]]]:
             print(f'Error: Invalid symbol "{symb}", saving process halted.')
             return False, []
     return check, added_symbols
+
+def change_workbook(wb_name_input: str, new: bool) -> int:
+    """Changes to existing workbook or creates a new one.
+    
+    Args:
+        wb_name_input: Workbook name string.
+        new: A boolean, True if new workbook is created, False is existing one is used.
+
+    Returns:
+        -1 if wb_name_input was not accepted,  
+        -2 if name is fine, new = False, but workbook not found.  
+        1 if wb name fine, new = False, and workbook was found and selected as current  
+        2 if wb name fine, new = True, and a new workbook was created and selected as current.
+    """
+    invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
+    if wb_name_input == '_default':
+        print("This workbook cannot be selected!")
+    elif len(wb_name_input.strip()) == 0:
+        print('Workbook name cannot be empty.')
+    elif len(invalid_chars.findall(wb_name_input)) > 0:
+        print('Workbook name cannot contain following characters:\n'
+              r'''#%&{}\/<>*?$!'":@+´'¨`|=''')
+    else:
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
+            wb_fname = json.load(f)
+        wb_fname['wb_name'] = wb_name_input
+        if not new: 
+            for _, dirs, _ in os.walk(FilePaths.WB_FILES_ROOT_PATH):
+                for d in dirs:
+                    if d.endswith(wb_name_input):
+                        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
+                            json.dump(wb_fname, f, indent=4)
+                        FilePaths.wb_name = wb_name_input
+                        print(f"Workbook '{wb_name_input}' selected.")
+                        FilePaths.update_filepaths()
+                        QueryVars.update_query_variables()
+                        WorkbookSheets.update_sheets()
+                        return 1
+            return -2
+        else:
+            with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
+                json.dump(wb_fname, f, indent=4)
+            FilePaths.wb_name = wb_name_input
+            print("Creating new folder structure under workbooks...")
+            workbook_tools.create_wb()
+            print(f"Workbook '{wb_name_input}' with type 'basic' created and selected.")
+            return 2
+    return -1
+
+def update_settings_json(query_input: str) -> None:
+    """Updates settings.json query, market and header values for current workbook.
+    
+    Args:
+        query_input: 'query', 'market' or 'headers'.
+    """
+    match query_input:
+        case 'query':
+            os.system(str(FilePaths.settings_path/'query.txt'))
+            try:
+                if os.path.getsize(FilePaths.settings_path/'query.txt') == 0:
+                    current_query = {}
+                else:
+                    with open(FilePaths.settings_path/'query.txt') as f:
+                        current_query = json.load(f)
+                with open(FilePaths.settings_path/'settings.json') as f:
+                    settings = json.load(f)
+                settings['query'] = current_query
+                with open(FilePaths.settings_path/'settings.json', 'w') as f:
+                    json.dump(settings, f, indent=4)
+            except json.decoder.JSONDecodeError:
+                print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
+        case 'market':
+            with open(FilePaths.settings_path/'settings.json') as f:
+                    settings = json.load(f)
+            new_market = input("Type a market name: there are no validity checks so make sure the value is "
+                            "correct!\n"
+                            "Empty input will keep the current value.\n"
+                            f"Current market value: {settings['market']}.\n"
+                            "[update query>market]>>>")
+            if new_market != '':
+                settings['market'] = new_market
+                with open(FilePaths.settings_path/'settings.json', 'w') as f:
+                    json.dump(settings, f, indent=4)
+                print(f"Market set as '{new_market}'.")       
+        case 'headers':
+            os.system(str(FilePaths.settings_path/'headers.txt'))
+            try:
+                if os.path.getsize(FilePaths.settings_path/'headers.txt') == 0:
+                    current_headers = {}
+                else:
+                    with open(FilePaths.settings_path/'headers.txt') as f:
+                        current_headers = json.load(f)
+                with open(FilePaths.settings_path/'settings.json') as f:
+                    settings = json.load(f)
+                settings['headers'] = current_headers
+                with open(FilePaths.settings_path/'settings.json', 'w') as f:
+                    json.dump(settings, f, indent=4)
+            except json.decoder.JSONDecodeError:
+                print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
+
+def delete_workbook(wb_name_to_del: str) -> int:
+    """Deletes workbook.
+    
+    Args:
+        wb_name_to_del: To be deleted workbook folder.
+    
+    Returns:
+        -1 if no file was deleted: either wrong name or doesn't exist. 0 if delete was succesful.
+    """
+    if wb_name_to_del == '_default':
+        print("Cannot delete default workbook!")
+        return -1
+    elif wb_name_to_del.endswith(('.txt', '.json')):
+        return -1
+    elif wb_name_to_del in os.listdir(FilePaths.WB_FILES_ROOT_PATH):
+        shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/wb_name_to_del)
+        print(f"Workbook '{wb_name_to_del}' contents deleted succesfully!")
+        return 0
+    else:
+        return -1

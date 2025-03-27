@@ -2,10 +2,7 @@
 
 import json
 import os
-import re
 import shutil
-
-import requests
 
 import commands_utils
 from paths import FilePaths
@@ -16,122 +13,84 @@ import workbook_tools
 def update_query() -> None:
     """Handles query-related updates using text and json files.
     
-    Note that these will also impact your xlsx file column names.
+    Note that changing query and/or headers will also impact your xlsx file column names.
     """
-    print('##########################################\n'
-          '==READ THIS IF YOU\'RE A FIRST-TIME USER==\n'
-          '##########################################\n'
-          'If you want to set up your current TradingView screener settings, the easiest way is:\n'
-          '-open your TradingView screener page, with your desired screener as currently selected.\n'
-          '-press F12 and refresh your page (F5).\n'
-          '-then have "Network" selected and below it you see "Filter URLs" search box.\n'
-          '-now type "scanner" in that box, wait a second or two, then select the top one.\n'
-          '-A window opens: choose "Requests" page -> right-click and select Copy All => AND KEEP THE WEB PAGE OPEN!\n'
-          '-You have your query in clipboard so click back to this program, type "query" and press Enter\n'
-          '-A text file pops up: it contains your current query - if it\'s empty, paste the one you just copied.\n'
-          '>You\'ve set your query! Next you need to set the market where symbols are searched from:\n\n'
+    QUERY_HELP= (
+        '##########################################\n'
+        'If you want to set up your current TradingView screener settings, the easiest way is:\n'
+        '-open your TradingView screener page, with your desired screener as currently selected.\n'
+        '-press F12 and refresh your page (F5).\n'
+        '-then have "Network" selected and below it you see "Filter URLs" search box.\n'
+        '-now type "scanner" in that box, wait a second or two, then select the top one.\n'
+        '-A window opens: choose "Requests" page -> right-click and select Copy All => AND KEEP THE WEB PAGE OPEN!\n'
+        '-You have your query in clipboard so click back to this program, type "query" and press Enter\n'
+        '-A text file pops up: it contains your current query - if it\'s empty, paste the one you just copied.\n'
+        '>You\'ve set your query! Next you need to set the market where symbols are searched from:\n\n'
 
-          '-back to developer tools: now select the 3. row/the one below "cached" on the left panel.\n'
-          '-again, you choose "Requests", but now scrolls all the way down: there should be a markets section with a' 
-          'country name\n'
-          'click back to program, type "market" and write your market value, then press Enter.\n'
-          '*Note* if you want to search over multiple markets, say "us" and "canada", then type "global" instead!\n'
+        '-back to developer tools: now select the 3. row/the one below "cached" on the left panel.\n'
+        '-again, you choose "Requests", but now scrolls all the way down: there should be a markets section with a' 
+        'country name\n'
+        'click back to program, type "market" and write your market value, then press Enter.\n'
+        '*Note* if you want to search over multiple markets, say "us" and "canada", then type "global" instead!\n'
 
-          '---This is everything you need...but if you wish to customize your column names for txt/excel files, check '
-          'this out:----\n\n'
+        '---This is everything you need...but if you wish to customize your column names for txt/excel files, check '
+        'this out:----\n\n'
 
-          '{\n'
-           '"A" : {"name": "Date"},\n'
-           '"B" : {"name": "Symbol"},\n'
-           '"C" : {"type": "float"},\n'
-           '"D" : {"name": "Price", "type": "float"},\n'
-           '"F" : {"name": "Volume", "type": "int"},\n'
-          '}\n\n'
-          'letters refer to correspondig workbook columns, name is the column name and type is the column value type.\n'
-          'Supported type values are "int" or "float": these ensure that numbers are either rounded down to an '
-          'integer, or are rounded down to 2 decimals points\n'
-          'Neither of the name/type values are necessary so you can have name, but not type and vice versa.\n'
-          'And if you want to leave default name values and don\'t care about rounding, remove the entire row!\n'
-          '#ONLY EXCEPTION is the date row \'"A" : {"name": "Date"}\': this must always exists (name you can still '
-          'customize).\n'
-          '#supports only characters A-Z; if your workbook exceeds this column limit, you need to use base values for '
-          'the rest\n\n'
-          
-          '/////////////////////////////\n'
-          'Edit workbook settings. Type one of the following commands, or type \'back\' to return to main ui.\n'
-          'query => current query; must be in JSON format. NOTE that order in \'columns\' matters: Nth value will '
-          'be N+1 column in .xlsx file (because first column is always date value).\n'
-          'market => markets where query data is searched in - either a country/region name or \'global\' if '
-          'multiple.\n'
-          'headers => custom header values, useful if you want to save data in excel; must be in JSON format.\n'
-          '...or type \'back\' to return to main ui.\n')
+        '{\n'
+        '"A" : {"name": "Date"},\n'
+        '"B" : {"name": "Symbol"},\n'
+        '"C" : {"type": "float"},\n'
+        '"D" : {"name": "Price", "type": "float"},\n'
+        '"F" : {"name": "Volume", "type": "int"},\n'
+        '}\n\n'
+        'letters refer to correspondig workbook columns, name is the column name and type is the column value type.\n'
+        'Supported type values are "int" or "float": these ensure that numbers are either rounded down to an '
+        'integer, or are rounded down to 2 decimals points\n'
+        'Neither of the name/type values are necessary so you can have name, but not type and vice versa.\n'
+        'And if you want to leave default name values and don\'t care about rounding, remove the entire row!\n'
+        '#ONLY EXCEPTION is the date row \'"A" : {"name": "Date"}\': this must always exists (name you can still '
+        'customize).\n'
+        '#supports only characters A-Z; if your workbook exceeds this column limit, you need to use base values for '
+        'the rest')
+    QUERY_COMMANDS_HELP = (
+            '/////////////////////////////\n'
+            'Query commands:\n'
+            'query => current query; must be in JSON format. NOTE that order in \'columns\' matters: Nth value will '
+            'be N+1 column in .xlsx file (because first column is always date value).\n'
+            'market => markets where query data is searched in - either a country/region name or \'global\' if '
+            'multiple.\n'
+            'headers => custom header values, useful if you want to save data in excel; must be in JSON format.\n'
+            'OTHER: \'help\' for detailed info, or \'back\' to return to main ui.')
+    print(QUERY_COMMANDS_HELP)
     while True:
         user_input = input('[update query]>>>')
-        if user_input == 'back':
-            QueryVars.update_query_variables()
-            print('Query values updated.')
-            return  
-        
-        elif user_input == 'query':
-            os.system(str(FilePaths.settings_path/'query.txt'))
-            try:
-                if os.path.getsize(FilePaths.settings_path/'query.txt') == 0:
-                    current_query = {}
-                else:
-                    with open(FilePaths.settings_path/'query.txt') as f:
-                        current_query = json.load(f)
-                with open(FilePaths.settings_path/'settings.json') as f:
-                    settings = json.load(f)
-                settings['query'] = current_query
-                with open(FilePaths.settings_path/'settings.json', 'w') as f:
-                    json.dump(settings, f, indent=4)
-            except json.decoder.JSONDecodeError:
-                print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
-
-        elif user_input == 'market':
-            with open(FilePaths.settings_path/'settings.json') as f:
-                    settings = json.load(f)
-            new_market = input("Type a market value: there are no validity checks so make sure the value is correct!\n"
-                               "Empty input will keep the current value.\n"
-                            f"Current market value: {settings['market']}.\n"
-                            "[update query>market]>>>")
-            if new_market != '':
-                settings['market'] = new_market
-                with open(FilePaths.settings_path/'settings.json', 'w') as f:
-                    json.dump(settings, f, indent=4)
-                print(f"Market set as '{new_market}'.")
-                
-        elif user_input == 'headers':
-            os.system(str(FilePaths.settings_path/'headers.txt'))
-            try:
-                if os.path.getsize(FilePaths.settings_path/'headers.txt') == 0:
-                    current_headers = {}
-                else:
-                    with open(FilePaths.settings_path/'headers.txt') as f:
-                        current_headers = json.load(f)
-                with open(FilePaths.settings_path/'settings.json') as f:
-                    settings = json.load(f)
-                settings['headers'] = current_headers
-                with open(FilePaths.settings_path/'settings.json', 'w') as f:
-                    json.dump(settings, f, indent=4)
-            except json.decoder.JSONDecodeError:
-                print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
+        match user_input:
+            case 'help':
+                print(QUERY_HELP)
+                input("\n~Press Enter to continue...")
+                print(QUERY_COMMANDS_HELP)
+            case 'back':
+                QueryVars.update_query_variables()
+                print('Query values updated.')
+                return    
+            case _:
+                commands_utils.update_settings_json(user_input)
 
 def update_wb_file_name(select_wb: list[str] = []) -> None:
     """Changes current workbook or creates a new one if it doesn't already exist.
     
     Args:
         select_wb: Workbook name. This variable should only be passed if screenerfetch is passed command line 
-        arguments. For this reason, it also has type list[str] instead of str.
+            arguments. For this reason, it also has type list[str] instead of str.
     """
     name_input: str | list[str] = []
+    all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
+    for f_name in all_workbooks[:]:
+        if f_name.endswith(('.txt', '.json')) or f_name == '_default':
+            all_workbooks.remove(f_name)
     if select_wb != []:
         name_input = select_wb[0]
     else:
-        all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
-        for f_name in all_workbooks[:]:
-            if f_name.endswith(('.txt', '.json')) or f_name == '_default':
-                all_workbooks.remove(f_name)
         print("--Non-empty input to select/create workbook, empty input to exit--\n"
                 f">Current: {FilePaths.wb_name}\n"
                             "Existing workbooks:\n"
@@ -139,59 +98,29 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
         for wb in all_workbooks:
             print(wb)
         name_input = input("====================\n[change wb]>>>")
-    invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
-    if len(name_input) == 0 or len(name_input.strip()) == 0:
-        print('Workbook name cannot be empty.')
-    elif len(invalid_chars.findall(name_input)) > 0:
-        print('Workbook name cannot contain following characters:\n'
-              r'''#%&{}\/<>*?$!'":@+´'¨`|=''')
+    if name_input == '_default':
+        print("This workbook cannot be selected!")
+    elif name_input in all_workbooks and name_input != '_default':
+        commands_utils.change_workbook(name_input, False)
     else:
-        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
-            wb_fname = json.load(f)
-        wb_fname['wb_name'] = name_input
-        if name_input == '_default':
-            print("This workbook cannot be selected!")
-            return
-        for _, dirs, _ in os.walk(FilePaths.WB_FILES_ROOT_PATH):
-            for d in dirs:
-                if d.endswith(name_input):
-                    with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
-                        json.dump(wb_fname, f, indent=4)
-                    FilePaths.wb_name = name_input
-                    print(f"Workbook '{name_input}' selected.")
-                    FilePaths.update_filepaths()
-                    QueryVars.update_query_variables()
-                    WorkbookSheets.update_sheets()
-                    return
         new_wb = input(f"Did not find workbook named '{name_input}'. Would you like to create one?\n"
-                       f"Folder 'workbooks/{name_input}' with necessary subfolders and files will be created "
-                       "during this process.\n"
+                        f"Folder 'workbooks/{name_input}' with necessary subfolders and files will be created "
+                        "during this process.\n"
                         "Type 'yes' to create one, or anything else to exit.\n"
                         "[change wb>new wb]>>>")
-        if new_wb.lower() == 'yes':
-            with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
-                json.dump(wb_fname, f, indent=4)
-            FilePaths.wb_name = name_input
-            print("Creating new folder structure under workbooks...")
-            create()
-            print(f"Workbook '{name_input}' with type 'basic' created and selected.")
-        else:
-            return
-
+        if new_wb == 'yes':
+            commands_utils.change_workbook(name_input, True)
+        
 def fetch() -> None:
-    """Send a query to Tradingview API and fetch data based on it.
-  
-    Query and received data are both in JSON format.
-    """
+    """Get api data, modify it based on custom header values, then store it."""
     print('[fetch]->fetching data... ', end='')
-    request_data_json = requests.post(url=QueryVars.url, 
-                                      json=QueryVars.my_query, 
-                                      headers=FetchData.REQUEST_HEADERS).json()
-    dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
-    dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
-    commands_utils.create_fetch_display_txt(dataframe_str_list)
-    FetchData.query_data = commands_utils.create_screener_data(dataframe_str_list)
-    print('\n-> Done!')
+    request_data_json = commands_utils.requests_api_data()
+    if request_data_json:
+        dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
+        dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
+        commands_utils.create_fetch_display_txt(dataframe_str_list)
+        FetchData.query_data = commands_utils.create_screener_data(dataframe_str_list)
+        print('\n-> Done!')
 
 def save() -> None:
     """Saves selected data to excel workbook.
@@ -312,12 +241,11 @@ def delete_workbook() -> None:
     if del_input == FilePaths.wb_name:
         print("Cannot delete currently used workbook. Halting deletion process.")
         return
-    if del_input in all_workbooks:
+    if del_input in all_workbooks and del_input != '_default':
         confirm = input(f"Are you absolutely sure you'd wish to remove '{del_input}'?\n"
                         "Type 'delete wb' to proceed, or anything else to halt deleting process.\n"
                         "[delete wb]>>>")
         if confirm == 'delete wb':
-            shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/del_input)
-            print(f"Workbook '{del_input}' contents deleted succesfully!")
+            commands_utils.delete_workbook(del_input)
             return
     print("No workbook was deleted this time.")
