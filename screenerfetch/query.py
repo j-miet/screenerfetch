@@ -196,7 +196,6 @@ class QueryVars:
                     ...
             except (KeyError, TypeError):
                 ...
-
         return column_headers, int_columns, float_columns
 
     @staticmethod

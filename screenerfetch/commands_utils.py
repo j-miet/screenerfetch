@@ -83,7 +83,7 @@ def clean_fetched_data(request_data: dict[str, Any]) -> pd.DataFrame:
         for column in data['d']:
             raw_temp.append(column)
         raw_data.append(raw_temp)
- 
+
     rounded = []
     for symbol_data in raw_data:
         newcolumn = []

@@ -237,16 +237,18 @@ def remove_duplicates() -> None:
     if counter > 0:
         wb.save(FilePaths.wb_path)
                 
-def create_wb() -> None:
+def create_wb(new_files: bool = True) -> None:
     """Creates a new workbook main file and names the worksheet with sheets.WorkbookSheetNames.sheet_names[0] value.
     
     Calling this function will overwrite the contents of existing workbook file.
 
     Args:
-        wb_type: Either 'basic' for data-only workbook, or 'custom' for user-customized workbook template.
+        new_files: Boolean to determine whether old settings files are overwritten or not; if False, will keep files 
+        which enabled custom columns for workbook.
     """    
     FilePaths.update_filepaths()
-    _create_workbook_files()
+    if new_files:
+        _create_workbook_files()
     QueryVars.update_query_variables()
     wb = openpyxl.Workbook()
     ws_data = wb.active

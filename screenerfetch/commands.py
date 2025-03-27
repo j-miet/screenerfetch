@@ -224,9 +224,14 @@ def copy() -> None:
     else:
         print('No copy was made.')
 
-def create() -> None:
-    """Creates a new xlsx workbook file template, *replacing the previous one*."""
-    workbook_tools.create_wb()
+def create(create_new: bool = True) -> None:
+    """Creates a new xlsx workbook file template, *replacing the previous one*.
+    
+    Args:
+        create_new: True to create wb with default type files, False to keep existing files so that workbook has 
+        updated columns.
+    """
+    workbook_tools.create_wb(create_new)
 
 def delete_workbook() -> None:
     """Deletes any existing workbook that is not currently in use."""

@@ -86,6 +86,7 @@ def open_cli() -> None:
     
     COMMAND_MESSAGE = (
         "--------------------------------------------------------\n"
+        "--------------------------------------------------------\n"
         "help => how to get started.\n"
         "commands => displays all basic commands available.\n"
         "wb/change wb => change current workbook. Is also used in creating new ones. You can see your currently "
@@ -104,11 +105,6 @@ def open_cli() -> None:
         f"exit => close the program and copy current {FilePaths.wb_name}.xlsx data "
                 f"into '{FilePaths.wb_autocopy_name}.xlsx'; replaces previous copy.\n"
         "print => prints current MY_QUERY contents.\n"
-        f"FORMAT WB => overwrites current {FilePaths.wb_name}.xlsx. Fresh workbook has only column headers defined.\n"
-        "\t     This preserves all settings files - so change those with 'update query' command, then format \n"
-        "\t     afterwards if you need to update columns in xlsx files.\n"
-        "DELETE WB => deletes selected workbook directory and all its contents. Cannot delete currently selected "
-            "workbook.\n"
         "update date => update dates to yyyy/mm/dd format in case they show as yyyy/mm/dd; hh.mm.ss.\n"
         "update nums => update all customly listed columns to numerical values - so don't use this on other than "
         "columns with numerical values!\n"
@@ -118,7 +114,20 @@ def open_cli() -> None:
         "\t\t     Remove iterates in reverse, meaning higher row indices are removed and lowest stays untouched.\n"
         "\t\t     E.g. if rows 10, 20, 35 have same date and name values, only 10 remains.\n"
         "\t\t     Gaps are automatically adjusted: when a row is deleted, newer rows will move one index down.\n"
-        "custom => commands for custom type workbook if they have been implemented.")
+        "custom => commands for custom type workbook if they have been implemented; see FORMAT WB below.\n"
+        f"UPDATE WB => overwrites current workbook '{FilePaths.wb_name}'. Overwrites current xlsx data (not the copy " 
+            "files), but preserves all settings files.\n"
+            "\t     Meant to be used for updating your xlsx headers values according to settings.json: call this "
+            "command if you are creating\n"
+            "\t     a new workbook and have already set all query stuff with 'update query'.\n"
+        f"FORMAT WB => format current workbook '{FilePaths.wb_name}' to any supported type, default being 'basic'. "
+            "All custom i.e. non-basic type workbooks support basic commands, though!\n"
+            "\t     This process will both overwrite any of your xlsx data (excluding copies) AND settings folder "
+            "data!\n"
+            "\t     Custom workbooks can access their custom commands, if they have been implemented, "
+            "via 'custom'.\n"
+        "DELETE WB => deletes selected workbook directory and all its contents. Cannot delete currently selected "
+            "workbook.")
     HELP_MESSAGE = ("-----------------------------------------------\n"
                     ">>>Quick guide on how to setup screenerfetch<<<\n"
                     "-write all commands without quotations."
@@ -169,6 +178,8 @@ def open_cli() -> None:
                 commands.remove_duplicate_data()
             case 'copy':
                 commands.copy()
+            case 'UPDATE WB':
+                commands.create(False)
             case 'FORMAT WB':
                 _create_new_wb()
             case 'DELETE WB':
