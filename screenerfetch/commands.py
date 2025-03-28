@@ -80,8 +80,8 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
     """Changes current workbook or creates a new one if it doesn't already exist.
     
     Args:
-        select_wb: Workbook name. This variable should only be passed if screenerfetch is passed command line 
-            arguments. For this reason, it also has type list[str] instead of str.
+        select_wb (list[str] = []): Workbook name. This variable should only be passed if screenerfetch is passed 
+            command line arguments. For this reason, it also has type list[str] instead of str.
     """
     name_input: str | list[str] = []
     all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
@@ -115,6 +115,7 @@ def fetch() -> int:
     """Get api data, modify it based on custom header values, then store it.
     
     Returns:
+        int:
         0 if fetching and data creation was succesful, -1 if empty dataframe was fetched.
     """
     print('[fetch]->fetching data... ', end='')
@@ -237,8 +238,8 @@ def create(create_new: bool = True) -> None:
     """Creates a new xlsx workbook file template, *replacing the previous one*.
     
     Args:
-        create_new: True to create wb with default type files, False to keep existing files so that workbook has 
-        updated columns.
+        create_new (bool=True): True to create wb with default type files, False to keep existing files so that 
+            workbook has updated columns.
     """
     workbook_tools.create_wb(create_new)
 

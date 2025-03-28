@@ -142,9 +142,10 @@ class QueryVars:
         "exchange"
 
         Args:
-            my_query: Columns of MY_QUERY i.e. query.MY_QUERY['columns']
+            my_query (list[str]): Columns of MY_QUERY i.e. query.MY_QUERY['columns']
 
         Returns:
+            list[str]:
             MY_QUERY column values with unused values removed.
         """
         delete_cols = ["description",
@@ -172,7 +173,13 @@ class QueryVars:
                                     ) -> tuple[dict[str, str], list[str], list[str]]:
         """Updates column values with custom names and lists all integer and float-valued columns.
 
+        Args:
+            query_cols (list[str]): Query columns list.
+            custom_headers (dict[str, dict[str, Any]]): Custom column header dictionary.
+            header_chars (list[str]): Xlsx sheet column letters.
+
         Returns:
+            tuple[dict[str,str],list[str],list[str]]:
             a 3-tuple of column headers with their names, integer column headers, and float column headers.
         """
         init_column_headers = {char: name for char, name in zip(header_chars, ['date']+(query_cols))}

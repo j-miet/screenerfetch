@@ -23,6 +23,7 @@ def get_date() -> str:
     """Returns current date in DD/MM/YYYY format.
     
     Returns:
+        str:
         Current date string.
     """
     current = str(date.today()).split('-')
@@ -33,9 +34,10 @@ def round_to_int(value: float | None) -> int | str:
     """Returns floor integer value of a float.
     
     Args:
-        value: Float or empty value.
+        value (float | None): Float or empty value.
 
     Returns:
+        int/str:
         Either a integer value, or '-' if value if NoneType.
     """
     if value is not None: 
@@ -43,12 +45,13 @@ def round_to_int(value: float | None) -> int | str:
     else:
         return '-'
 
-def requests_api_data() -> dict[str, Any]:
+def requests_api_data() -> Any:
     """Request data from Tradingview API based on current settings.json values.
     
     Data is send as json dictionary query. If request was succesful, returns all as another json dictionary.
 
     Returns:
+        Any:
         Json dictionary of fetched api data.
     
     Raises:
@@ -60,7 +63,7 @@ def requests_api_data() -> dict[str, Any]:
     else:
         raise Exception("Could not fetch any data from API.")
 
-def clean_fetched_data(request_data: dict[str, Any]) -> pd.DataFrame:
+def clean_fetched_data(request_data: Any) -> pd.DataFrame:
     """Cleans fetched API data, updates numeric types for columns, and saves it for utilization.
 
     Request JSON data has two components: 'totalCount' and 'data'.
@@ -76,10 +79,11 @@ def clean_fetched_data(request_data: dict[str, Any]) -> pd.DataFrame:
     Rounding will also save zero digits: e.g. 100.001 becomes 100.00, 100.999 becomes 101.00.
 
     Args:
-        request_data: JSON data from TradingView API.
+        request_data (Any): JSON data dictionary object fetched from TradingView web API.
 
     Returns:
-        Pandas dataframe storing all cleaned fetch data.
+        pandas.Dataframe:
+            Cleaned fetch data.
     """
     raw_data = []
     for data in request_data['data']:
@@ -114,7 +118,7 @@ def create_fetch_display_txt(df_string: list[str]) -> None:
     Previous file data is overwritten each time.
 
     Args:
-        df_string: Pandas dataframe of screener data, converted into a list of row strings.
+        df_string (list[str]): Pandas dataframe of screener data, converted into a list of row strings.
     """
     display_txt = df_string[:]  # creates a copy, otherwise the line separator gets appended below!
     date_str = get_date().split('/')
@@ -128,14 +132,15 @@ def create_fetch_display_txt(df_string: list[str]) -> None:
         file_str = '\n'.join(display_txt)
         f.write(file_str)
 
-def create_screener_data(df_dict: dict[str, Any]) -> list[list[Any]]:
+def create_screener_data(df_dict: dict[Any, Any]) -> list[list[Any]]:
     """Arranges fetched data from a dictionary into its own symbol data list that preserves column order.
 
     Args:
-        df_dict: Pandas dataframe of screener data, converted into a dictionary. Each key lists corresponding data in 
-            fetch order, e.g. df_dict["name][N-1] to get "name" of Nth symbol from query.
+        df_dict (dict[Any, Any]): Pandas dataframe of screener data, converted into a dictionary. Each key lists 
+            corresponding data in fetch order, e.g. df_dict["name][N-1] to get "name" of Nth symbol from query.
 
     Returns:
+        list[list[str]]:
         All symbol data in a list, each symbol in its own sublists, creating a list of lists.
     """
     final_query_data: list[list[str]] = []
@@ -154,6 +159,7 @@ def select_saved_objects() -> tuple[bool, list[list[str]]]:
     Symbols meant to be saved are recognized by having a '+' character before symbol name.
 
     Returns:
+        tuple[bool,list[list[str]]]:
         A tuple where first value indicates whether saving was succesful and second is list of all symbol data needed 
         to be stored in an excel workbook.
     """
@@ -191,9 +197,10 @@ def check_wb_name_validity(wb_name: str) -> int:
     Name cannot be '_default', empty, or contain characters.
     
     Args:
-        wb_name: Workbook name.
+        wb_name (str): Workbook name.
 
     Returns:
+        int:
         -1 for bad input, 0 is valid name.
     """
     invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
@@ -214,11 +221,13 @@ def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> i
     """Changes to existing workbook or creates a new one.
     
     Args:
-        wb_name_input: Workbook name string.
-        new: True if new workbook is created, False is existing one is used.
-        check_name: True if workbook name validity check is performed, False is not. Default value is True.
+        wb_name_input (str): Workbook name string.
+        new (bool): True if new workbook is created, False is existing one is used.
+        check_name (bool=True): True if workbook name validity check is performed, False is not. Default value is 
+            True.
 
     Returns:
+        int:
         -1 if wb_name_input was not accepted,  
         -2 if name is fine, new = False, but workbook not found.  
         -3 if name is fine, new = True, but workbook already exist  
@@ -263,9 +272,9 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
     """Updates settings.json query, market and header values for current workbook.
     
     Args:
-        query_input: 'query', 'market' or 'headers'.
-        manual_update: Default value True means user inserts their data into opened files. False requires writing into 
-            query.txt & headers.txt before calling this function.
+        query_input (str): 'query', 'market' or 'headers'.
+        manual_update (bool=True): Default value True means user inserts their data into opened files. False requires 
+            writing into query.txt & headers.txt before calling this function.
     """
     match query_input:
         case 'query':
@@ -318,9 +327,10 @@ def delete_workbook(wb_name_to_del: str) -> int:
     """Deletes workbook.
     
     Args:
-        wb_name_to_del: To be deleted workbook folder.
+        wb_name_to_del (str): To be deleted workbook folder.
 
     Returns:
+        int:
         1 if no file was deleted; invalid name/doesn't exist. 0 if delete was succesful.
     """
     if wb_name_to_del == '_default':

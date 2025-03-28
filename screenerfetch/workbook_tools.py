@@ -49,9 +49,10 @@ def get_last_row(sheet_name: str) -> int:
     https://singhaldhruv.medium.com/python-and-openpyxl-counting-non-empty-rows-in-excel-made-easy-36d708671918
 
     Args:
-        sheet_name: Worksheet name.
+        sheet_name (str): Worksheet name.
 
     Returns:
+        int:
         Last non-empty row.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
@@ -64,10 +65,11 @@ def check_date(date_str: str) -> bool:
     """Checks whether a date exists in workbook.
     
     Args:
-        date_str: Date string in a yyyy-mm-dd format.
+        date_str (str): Date string in a yyyy-mm-dd format.
         
     Returns:
-        A boolean.
+        bool:
+        True if date found, else False.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
@@ -89,8 +91,9 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
     row and leaves a gap of empty row in between.
 
     Args:
-        symbol_data: 2D list where each inner list contains all data for a specific symbol.
-        date_str: Date in DD/MM/YYYY format.
+        symbol_data (list[list[str]]): 2D list where each inner list contains all data for a specific symbol.
+            date_str: Date in DD/MM/YYYY format.
+        date_str (str): Current date.
     """
     AUTO_UPDATE_NUMS = True
 
@@ -129,7 +132,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
     Jumps over when encountering an error: most typical error is to have TypeError when cell is empty and returns None.
 
     Args:
-        start_row: Row number where updating starts. Default is 2.
+        start_row (int=2): Row number where updating starts. Default is 2.
     """
     int_columns = QueryVars.int_cols
     xlsx_int_columns = QueryVars.sheet_xlsx_int_cols
@@ -157,7 +160,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
         return
     print('Error occured while updating values to numbers...')
 
-def update_datetime(first_row: int) -> None:
+def update_datetime(first_row: int = 2) -> None:
     """Update date column values to datetime yyyy-mm-dd format.
     
     Sometimes cells update their values to correct yyyy-mm-dd format, and get the full
@@ -170,7 +173,7 @@ def update_datetime(first_row: int) -> None:
     Currently updates *all* dates in the second sheet as well.
     
     Args:
-        first_row: Row number where updating begins. Is always >= 2 as row 1 points to headers.
+        first_row (int=2): Row number where updating begins. Is always >= 2 as row 1 points to headers.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
@@ -188,7 +191,7 @@ def export_wb(type: str) -> None:
     """Exports workbook data to specific format'.
     
     Args:
-        type: File format - 'txt', 'csv' or 'json'. Can also pass 'all' to export all supported file types.
+        type (str): File format - 'txt', 'csv' or 'json'. Can also pass 'all' to export all supported file types.
     """
     df = pd.read_excel(FilePaths.wb_path, WorkbookSheets.sheet_names[0])
     if type == 'txt': 
@@ -243,8 +246,8 @@ def create_wb(new_files: bool = True) -> None:
     Calling this function will overwrite the contents of existing workbook file.
 
     Args:
-        new_files: Boolean to determine whether old settings files are overwritten or not; if False, will keep files 
-        which enabled custom columns for workbook.
+        new_files (bool=True): Boolean to determine whether old settings files are overwritten or not; if False, will 
+            keep files which enabled custom columns for workbook.
     """    
     FilePaths.update_filepaths()
     if new_files:
