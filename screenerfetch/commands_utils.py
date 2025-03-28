@@ -34,6 +34,7 @@ def round_to_int(value: float | None) -> int | str:
     
     Args:
         value: Float or empty value.
+
     Returns:
         Either a integer value, or '-' if value if NoneType.
     """
@@ -138,7 +139,8 @@ def create_screener_data(df_dict: dict[str, Any]) -> list[list[Any]]:
         All symbol data in a list, each symbol in its own sublists, creating a list of lists.
     """
     final_query_data: list[list[str]] = []
-    symbol_total = len(df_dict["name"])
+    first_col = tuple(df_dict.keys())[0]
+    symbol_total = len(df_dict[first_col])
     for symb in range(0, symbol_total):
         current_symbol_data = []
         for key in df_dict.keys():
@@ -183,63 +185,92 @@ def select_saved_objects() -> tuple[bool, list[list[str]]]:
             return False, []
     return check, added_symbols
 
-def change_workbook(wb_name_input: str, new: bool) -> int:
+def check_wb_name_validity(wb_name: str) -> int:
+    """Check if workbook name is valid.
+
+    Name cannot be '_default', empty, or contain characters.
+    
+    Args:
+        wb_name: Workbook name.
+
+    Returns:
+        -1 for bad input, 0 is valid name.
+    """
+    invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
+    if wb_name == '_default':
+        print("This workbook cannot be selected!")
+        return -1
+    elif len(wb_name.strip()) == 0:
+        print('Workbook name cannot be empty.')
+        return -1
+    elif len(invalid_chars.findall(wb_name)) > 0:
+        print('Workbook name cannot contain following characters:\n'
+              r'''#%&{}\/<>*?$!'":@+´'¨`|=''')
+        return -1
+    else:
+        return 0
+
+def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> int:
     """Changes to existing workbook or creates a new one.
     
     Args:
         wb_name_input: Workbook name string.
-        new: A boolean, True if new workbook is created, False is existing one is used.
+        new: True if new workbook is created, False is existing one is used.
+        check_name: True if workbook name validity check is performed, False is not. Default value is True.
 
     Returns:
         -1 if wb_name_input was not accepted,  
         -2 if name is fine, new = False, but workbook not found.  
+        -3 if name is fine, new = True, but workbook already exist  
         1 if wb name fine, new = False, and workbook was found and selected as current  
         2 if wb name fine, new = True, and a new workbook was created and selected as current.
     """
-    invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
-    if wb_name_input == '_default':
-        print("This workbook cannot be selected!")
-    elif len(wb_name_input.strip()) == 0:
-        print('Workbook name cannot be empty.')
-    elif len(invalid_chars.findall(wb_name_input)) > 0:
-        print('Workbook name cannot contain following characters:\n'
-              r'''#%&{}\/<>*?$!'":@+´'¨`|=''')
+    if check_name:
+        if check_wb_name_validity(wb_name_input) == -1:
+            return -1
+    exists = False
+    for dir in os.listdir(FilePaths.WB_FILES_ROOT_PATH):
+        if dir == wb_name_input:
+            exists = True
+            break
+    with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
+        wb_fname = json.load(f)
+    wb_fname['wb_name'] = wb_name_input
+    if not new and not exists:
+        return -2
+    elif not new and exists: 
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
+            json.dump(wb_fname, f, indent=4)
+        FilePaths.wb_name = wb_name_input
+        print(f"Workbook '{wb_name_input}' selected.")
+        FilePaths.update_filepaths()
+        QueryVars.update_query_variables()
+        WorkbookSheets.update_sheets()
+        return 1
+    elif new and not exists:
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
+            json.dump(wb_fname, f, indent=4)
+        FilePaths.wb_name = wb_name_input
+        print("Creating new folder structure under workbooks...")
+        workbook_tools.create_wb()
+        print(f"Workbook '{wb_name_input}' with type 'basic' created and selected.")
+        return 2
     else:
-        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
-            wb_fname = json.load(f)
-        wb_fname['wb_name'] = wb_name_input
-        if not new: 
-            for _, dirs, _ in os.walk(FilePaths.WB_FILES_ROOT_PATH):
-                for d in dirs:
-                    if d.endswith(wb_name_input):
-                        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
-                            json.dump(wb_fname, f, indent=4)
-                        FilePaths.wb_name = wb_name_input
-                        print(f"Workbook '{wb_name_input}' selected.")
-                        FilePaths.update_filepaths()
-                        QueryVars.update_query_variables()
-                        WorkbookSheets.update_sheets()
-                        return 1
-            return -2
-        else:
-            with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
-                json.dump(wb_fname, f, indent=4)
-            FilePaths.wb_name = wb_name_input
-            print("Creating new folder structure under workbooks...")
-            workbook_tools.create_wb()
-            print(f"Workbook '{wb_name_input}' with type 'basic' created and selected.")
-            return 2
-    return -1
+        print("Workbook already exists.")
+        return -3
 
-def update_settings_json(query_input: str) -> None:
+def update_settings_json(query_input: str, manual_update: bool = True) -> None:
     """Updates settings.json query, market and header values for current workbook.
     
     Args:
         query_input: 'query', 'market' or 'headers'.
+        manual_update: Default value True means user inserts their data into opened files. False requires writing into 
+            query.txt & headers.txt before calling this function.
     """
     match query_input:
         case 'query':
-            os.system(str(FilePaths.settings_path/'query.txt'))
+            if manual_update:
+                os.system(str(FilePaths.settings_path/'query.txt'))
             try:
                 if os.path.getsize(FilePaths.settings_path/'query.txt') == 0:
                     current_query = {}
@@ -265,9 +296,10 @@ def update_settings_json(query_input: str) -> None:
                 settings['market'] = new_market
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
-                print(f"Market set as '{new_market}'.")       
+                print(f"Market set as '{new_market}'.")    
         case 'headers':
-            os.system(str(FilePaths.settings_path/'headers.txt'))
+            if manual_update:
+                os.system(str(FilePaths.settings_path/'headers.txt'))
             try:
                 if os.path.getsize(FilePaths.settings_path/'headers.txt') == 0:
                     current_headers = {}
@@ -287,9 +319,9 @@ def delete_workbook(wb_name_to_del: str) -> int:
     
     Args:
         wb_name_to_del: To be deleted workbook folder.
-    
+
     Returns:
-        -1 if no file was deleted: either wrong name or doesn't exist. 0 if delete was succesful.
+        1 if no file was deleted; invalid name/doesn't exist. 0 if delete was succesful.
     """
     if wb_name_to_del == '_default':
         print("Cannot delete default workbook!")
