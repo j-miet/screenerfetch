@@ -19,6 +19,7 @@ def check_if_empty() -> bool:
     """Checks if current workbook has any non-header data in it.
     
     Returns:
+        bool:
         True if data was found, False if not.
     """
     df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Date'])
@@ -140,7 +141,7 @@ def show_daily_candles(date: str) -> None:
     Also displays volumes of each symbol + distribution of green and red candles.
     
     Args:
-        date: A date string in 'yyyy-mm-dd' format. Sheet data for this date must exists in current workbook.
+        date (str): A date string in 'yyyy-mm-dd' format. Sheet data for this date must exists in current workbook.
     """
     plt.style.use(STYLE)
     cs_pos_color = 'green'

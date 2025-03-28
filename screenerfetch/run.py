@@ -19,7 +19,7 @@ def _custom_create(wb_type: str) -> None:
     """Creates workbook for given workbook type..
     
     Args:
-        wb_type: Workbook type.
+        wb_type (str): Workbook type.
     """
     # Add workbook creation command of any custom package here
     match wb_type:

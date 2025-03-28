@@ -39,7 +39,7 @@ def add_row_in_sheet2(input_str: str) -> None:
     Customize the row/col values inside loop if you need to add/remove stuff.
 
     Args:
-        input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
+        input_str (str): Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
@@ -73,7 +73,7 @@ def edit_notes(input_str: str) -> None:
     datetime.datetime comparisons cause a lot of headache for type checker like mypy so type: ignore is added.
 
     Args:
-        input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
+        input_str (str): Symbol name and date in SYMBOL YYYY-MM-DD format.
     """
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[1]]
@@ -98,7 +98,8 @@ def add_image_hyperlinks(input_str: str) -> None:
     
     Requires a 'custom' workbook (or else you need to add columns manually).
 
-    Images are added to the second worksheet. Will always add both image hyperlinks, even if one or both images are missing.
+    Images are added to the second worksheet. Will always add both image hyperlinks, even if one or both images are 
+    missing.
 
     Args:
         input_str: Symbol name and date in SYMBOL YYYY-MM-DD format.
