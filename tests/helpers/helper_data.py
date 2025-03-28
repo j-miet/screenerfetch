@@ -2,7 +2,7 @@
 
 from query import QueryVars
 
-my_query_test = {
+query_test = {
     'markets': ['america'],
     'options': {'lang': 'en'},
     'columns': ['name',
@@ -35,6 +35,27 @@ my_query_test = {
     'range': [0, 5]
 }
 
+headers_test = {
+    'A' : {'name': 'Date'},
+    'B' : {'name': 'Symbol'},
+    'C' : {'type': 'float'},
+    'D' : {'type': 'int'},
+    'F' : {'name': 'High', 'type': 'int'},
+    'G' : {'type': 'int'},
+    'H' : {'name': 'Float'},
+    'I' : {'name': 'Market Cap', 'type': 'int'}
+}
+
+settings_test = {
+    'type': 'basic',
+    'market': 'america',
+    'headers': headers_test,
+    'query': query_test
+}
+
+actual_columns_test = QueryVars.get_actual_column_values(query_test['columns']) # type: ignore
+header_chars_test = [f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(actual_columns_test)+1)))]
+
 json_data_test = {'totalCount': 110, 
             'data': [
             {'s': 'NASDAQ:NFLX', 'd': ['NFLX', 863.53, 869.68, 854.745, 916.40, 9846543, 424635922.284, 
@@ -48,25 +69,12 @@ json_data_test = {'totalCount': 110,
             {'s': 'NASDAQ:NVDA', 'd': ['NVDA', 139.16, 140.83, 137.09, 141.83, 197735798, 23513142880, 
                                         3448926744843]}]}
 
-custom_headers_test = {
-    'A' : {'name': 'Date'},
-    'B' : {'name': 'Symbol'},
-    'C' : {'type': 'float'},
-    'D' : {'type': 'int'},
-    'F' : {'name': 'High', 'type': 'int'},
-    'G' : {'type': 'int'},
-    'H' : {'name': 'Float'},
-    'I' : {'name': 'Market Cap', 'type': 'int'}
-}
-actual_columns_test = QueryVars.get_actual_column_values(my_query_test['columns']) # type: ignore
-header_chars_test = [f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(actual_columns_test)+1)))]
-
 saved_query_data = [
-        ['NFLX', '863.53', '869.68', '854.75', '916.40', '9846543', '424635922.28', '371751783265.99'],
-        ['ORCL', '163.87', '172.57', '162.75', '173.37', '30228784', '1644595698.24', '482670726843.00'],
-        ['ANET', '121.56', '121.50', '119.50', '121.92', '6366606', '1032606375.60', '153060781860'],
-        ['MRVL', '125.85', '123.78', '122.10', '126.11', '12770695', '857983888.50', '107106831433'],
-        ['NVDA', '139.16', '140.83', '137.09', '141.83', '197735798', '23513142880', '3448926744843']]
+        ['NFLX', '863.53', '869.68', '854.75', '916.40', 9846543, '424635922.28', '371751783265.99'],
+        ['ORCL', '163.87', '172.57', '162.75', '173.37', 30228784, '1644595698.24', '482670726843.00'],
+        ['ANET', '121.56', '121.50', '119.50', '121.92', 6366606, '1032606375.60', 153060781860],
+        ['MRVL', '125.85', '123.78', '122.10', '126.11', 12770695, '857983888.50', 107106831433],
+        ['NVDA', '139.16', '140.83', '137.09', '141.83', 197735798, 23513142880, 3448926744843]]
 
 # This is not actually needed...
 saved_query_data_txt = str(
