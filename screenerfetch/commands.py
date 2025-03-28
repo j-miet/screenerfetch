@@ -98,10 +98,10 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
         for wb in all_workbooks:
             print(wb)
         name_input = input("====================\n[change wb]>>>")
-    if name_input == '_default':
-        print("This workbook cannot be selected!")
-    elif name_input in all_workbooks and name_input != '_default':
-        commands_utils.change_workbook(name_input, False)
+    if commands_utils.check_wb_name_validity(name_input) == -1:
+        return
+    elif name_input in all_workbooks:
+        commands_utils.change_workbook(name_input, False, False)
     else:
         new_wb = input(f"Did not find workbook named '{name_input}'. Would you like to create one?\n"
                         f"Folder 'workbooks/{name_input}' with necessary subfolders and files will be created "
@@ -109,19 +109,28 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
                         "Type 'yes' to create one, or anything else to exit.\n"
                         "[change wb>new wb]>>>")
         if new_wb == 'yes':
-            commands_utils.change_workbook(name_input, True)
+            commands_utils.change_workbook(name_input, True, False)
         
-def fetch() -> None:
-    """Get api data, modify it based on custom header values, then store it."""
+def fetch() -> int:
+    """Get api data, modify it based on custom header values, then store it.
+    
+    Returns:
+        0 if fetching and data creation was succesful, -1 if empty dataframe was fetched.
+    """
     print('[fetch]->fetching data... ', end='')
     request_data_json = commands_utils.requests_api_data()
-    if request_data_json:
+    print(request_data_json)
+    if request_data_json['totalCount'] != 0:
         dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
         dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
         dataframe_dict = dataframe_cleaned.to_dict()
         commands_utils.create_fetch_display_txt(dataframe_str_list)
         FetchData.query_data = commands_utils.create_screener_data(dataframe_dict)
         print('\n-> Done!')
+        return 0
+    else:
+        print('Query returned an empty dataframe, no fetch data was saved.')
+        return -1
 
 def save() -> None:
     """Saves selected data to excel workbook.
