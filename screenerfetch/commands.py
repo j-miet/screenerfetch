@@ -119,7 +119,6 @@ def fetch() -> int:
     """
     print('[fetch]->fetching data... ', end='')
     request_data_json = commands_utils.requests_api_data()
-    print(request_data_json)
     if request_data_json['totalCount'] != 0:
         dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
         dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
