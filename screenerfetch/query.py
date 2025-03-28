@@ -66,9 +66,9 @@ custom_headers = {
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 import copy
 import json
+from typing import TYPE_CHECKING
 
 from paths import FilePaths
 
@@ -196,7 +196,6 @@ class QueryVars:
                     ...
             except (KeyError, TypeError):
                 ...
-
         return column_headers, int_columns, float_columns
 
     @staticmethod
@@ -210,7 +209,11 @@ class QueryVars:
         QueryVars.custom_headers = current_settings['headers']
         QueryVars.wb_type = current_settings['type']
 
-        QueryVars.actual_columns = QueryVars.get_actual_column_values(QueryVars.my_query['columns']) # type: ignore
+        try:
+            QueryVars.actual_columns = QueryVars.get_actual_column_values(QueryVars.my_query['columns']) # type: ignore
+        except KeyError:
+            print("No query columns detected, please update query.txt immediately!")
+            QueryVars.actual_columns = QueryVars.get_actual_column_values(["name"])
         QueryVars.header_chars = [
             f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(QueryVars.actual_columns)+1)))]
         QueryVars.col_headers, QueryVars.int_cols, QueryVars.float_cols  = QueryVars.get_column_header_data( 
