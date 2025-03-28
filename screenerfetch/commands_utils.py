@@ -45,16 +45,19 @@ def round_to_int(value: float | None) -> int | str:
 def requests_api_data() -> dict[str, Any]:
     """Request data from Tradingview API based on current settings.json values.
     
-    Both query and received data are in JSON-supported dictionary objects.
+    Data is send as json dictionary query. If request was succesful, returns all as another json dictionary.
+
+    Returns:
+        Json dictionary of fetched api data.
+    
+    Raises:
+        Exception: Request status code was not 200.
     """
-    try:
-        request_data_json = requests.post(url=QueryVars.url, 
-                                        json=QueryVars.my_query, 
-                                        headers=FetchData.REQUEST_HEADERS).json()
-        return request_data_json
-    except requests.exceptions.JSONDecodeError:
-        print("\n*Could not find data for currently selected market*")
-        return {}
+    request_data = requests.post(url=QueryVars.url, json=QueryVars.my_query, headers=FetchData.REQUEST_HEADERS)
+    if request_data.status_code == requests.codes.ok:
+        return request_data.json()
+    else:
+        raise Exception("Could not fetch any data from API.")
 
 def clean_fetched_data(request_data: dict[str, Any]) -> pd.DataFrame:
     """Cleans fetched API data, updates numeric types for columns, and saves it for utilization.
@@ -124,38 +127,23 @@ def create_fetch_display_txt(df_string: list[str]) -> None:
         file_str = '\n'.join(display_txt)
         f.write(file_str)
 
-def create_screener_data(df_string: list[str]) -> list[list[str]]:
-    """Arranges each row of data string into its own symbol data list that preserves column order.
-
-    Saving process:
-        String data is split into sublists containing data for each symbol, and all of these lists are then stored 
-        inside the variable list. This variable is used with 'saveall' and 'save' commands to locate, verify and save 
-        valid data rows into an excel workbook.
+def create_screener_data(df_dict: dict[str, Any]) -> list[list[Any]]:
+    """Arranges fetched data from a dictionary into its own symbol data list that preserves column order.
 
     Args:
-        df_string: Pandas dataframe of screener data, converted into a list of row strings.
+        df_dict: Pandas dataframe of screener data, converted into a dictionary. Each key lists corresponding data in 
+            fetch order, e.g. df_dict["name][N-1] to get "name" of Nth symbol from query.
 
     Returns:
-        All symbol data in a list, each symbol in its own sublists.
+        All symbol data in a list, each symbol in its own sublists, creating a list of lists.
     """
-    screenerdata_strings = df_string[1:]    # cut off the column names and include only symbol data
-    all_data_rows: list[str] = []
-    for data_row in screenerdata_strings:
-        data_row_list = list(data_row.strip()) 
-        status = 'empty'
-        for index in range(len(data_row_list)):
-            if data_row_list[index] == ' ' and status == 'empty':
-                data_row_list[index] = '!'
-                status = 'filled'
-            elif data_row_list[index] != ' ' and status == 'filled':
-                status = 'empty'
-        all_data_rows.append(''.join(data_row_list).replace(' ', ''))
-
     final_query_data: list[list[str]] = []
-    for data in all_data_rows:
-        final = data.split('!')
-        final_query_data.append(final)
-
+    symbol_total = len(df_dict["name"])
+    for symb in range(0, symbol_total):
+        current_symbol_data = []
+        for key in df_dict.keys():
+            current_symbol_data.append(df_dict[key][symb])
+        final_query_data.append(current_symbol_data)
     return final_query_data
 
 def select_saved_objects() -> tuple[bool, list[list[str]]]:

@@ -118,8 +118,9 @@ def fetch() -> None:
     if request_data_json:
         dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
         dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
+        dataframe_dict = dataframe_cleaned.to_dict()
         commands_utils.create_fetch_display_txt(dataframe_str_list)
-        FetchData.query_data = commands_utils.create_screener_data(dataframe_str_list)
+        FetchData.query_data = commands_utils.create_screener_data(dataframe_dict)
         print('\n-> Done!')
 
 def save() -> None:
