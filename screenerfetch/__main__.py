@@ -21,13 +21,15 @@ def main() -> None:
     If arguments are passed, runs commands matching to these args, then exits: for scripting purposes.
     If ran without commands, will instead open the full CLI program.
     """
-    if len(sys.argv[1:]) > 0:
-        if len(sys.argv[1:]) == 1 and sys.argv[1] == '-log':  
-            logger.setLevel(logging.DEBUG)
-            logger.debug('Starting screenerfetch')
-            run.open_cli()
-        else:
+    if sys.argv[1] == '-log':
+        logger.setLevel(logging.DEBUG)
+        logger.debug('Starting screenerfetch')
+        if len(sys.argv[2:]) > 0:
             run_script.execute_args_commands()
+        else:
+            run.open_cli()
+    elif len(sys.argv[1:]) > 0:
+        run_script.execute_args_commands()
     else:
         run.open_cli()
     logger.debug('Closing screenerfetch')
