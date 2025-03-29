@@ -3,6 +3,7 @@
 from __future__ import annotations
 from datetime import date
 import json
+import logging
 import os
 import re
 import shutil
@@ -18,6 +19,8 @@ import workbook_tools
 
 if TYPE_CHECKING:
     from typing import Any
+
+logger = logging.getLogger('screenerfetch')
 
 def get_date() -> str:
     """Returns current date in DD/MM/YYYY format.
@@ -57,10 +60,12 @@ def requests_api_data() -> Any:
     Raises:
         Exception: Request status code was not 200.
     """
+    logger.debug("commands_utils> requests_api_data")
     request_data = requests.post(url=QueryVars.url, json=QueryVars.my_query, headers=FetchData.REQUEST_HEADERS)
     if request_data.status_code == requests.codes.ok:
         return request_data.json()
     else:
+        logger.debug("commands_utils> requests_api_data: Invalid http status code, critical error")
         raise Exception("Could not fetch any data from API.")
 
 def clean_fetched_data(request_data: Any) -> pd.DataFrame:
@@ -85,6 +90,7 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
         pandas.Dataframe:
             Cleaned fetch data.
     """
+    logger.debug("commands_utils> clean_fetched_data")
     raw_data = []
     for data in request_data['data']:
         raw_temp = []
@@ -120,6 +126,7 @@ def create_fetch_display_txt(df_string: list[str]) -> None:
     Args:
         df_string (list[str]): Pandas dataframe of screener data, converted into a list of row strings.
     """
+    logger.debug("commands_utils> create_fetch_display_txt")
     display_txt = df_string[:]  # creates a copy, otherwise the line separator gets appended below!
     date_str = get_date().split('/')
     ymd_date = date_str[2]+'/'+date_str[1]+'/'+date_str[0]
@@ -143,6 +150,7 @@ def create_screener_data(df_dict: dict[Any, Any]) -> list[list[Any]]:
         list[list[str]]:
         All symbol data in a list, each symbol in its own sublists, creating a list of lists.
     """
+    logger.debug("commands_utils> create_screener_data")
     final_query_data: list[list[str]] = []
     first_col = tuple(df_dict.keys())[0]
     symbol_total = len(df_dict[first_col])
@@ -163,6 +171,7 @@ def select_saved_objects() -> tuple[bool, list[list[str]]]:
         A tuple where first value indicates whether saving was succesful and second is list of all symbol data needed 
         to be stored in an excel workbook.
     """
+    logger.debug("commands_utils> select_saved_objects")
     symbols: list[str] = []
     if FetchData.query_data == []:
             print('No data available to save. Fetch data before you attempt to save it.')
@@ -203,6 +212,7 @@ def check_wb_name_validity(wb_name: str) -> int:
         int:
         -1 for bad input, 0 is valid name.
     """
+    logger.debug("commands_utils> check_wb_name_validity")
     invalid_chars = re.compile(r"""[#%&{}\/<>*?$!'":@+´'¨`|=]""")
     if wb_name == '_default':
         print("This workbook cannot be selected!")
@@ -215,6 +225,7 @@ def check_wb_name_validity(wb_name: str) -> int:
               r'''#%&{}\/<>*?$!'":@+´'¨`|=''')
         return -1
     else:
+        logger.debug("commands_utils> check_wb_name_validity: Returned 0")
         return 0
 
 def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> int:
@@ -234,8 +245,13 @@ def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> i
         1 if wb name fine, new = False, and workbook was found and selected as current  
         2 if wb name fine, new = True, and a new workbook was created and selected as current.
     """
+    logger.debug("commands_utils> change_workbook: Called with following args\n"
+                f"wb_name_input: {wb_name_input}\n"
+                f"new: {new}\n"
+                f"check_name: {check_name}")
     if check_name:
         if check_wb_name_validity(wb_name_input) == -1:
+            logger.debug("commands_utils> change_workbook: Returned -1")
             return -1
     exists = False
     for dir in os.listdir(FilePaths.WB_FILES_ROOT_PATH):
@@ -246,6 +262,7 @@ def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> i
         wb_fname = json.load(f)
     wb_fname['wb_name'] = wb_name_input
     if not new and not exists:
+        logger.debug("commands_utils> change_workbook: Returned -2")
         return -2
     elif not new and exists: 
         with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
@@ -255,6 +272,7 @@ def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> i
         FilePaths.update_filepaths()
         QueryVars.update_query_variables()
         WorkbookSheets.update_sheets()
+        logger.debug("commands_utils> change_workbook: Returned 1")
         return 1
     elif new and not exists:
         with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
@@ -263,9 +281,11 @@ def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> i
         print("Creating new folder structure under workbooks...")
         workbook_tools.create_wb()
         print(f"Workbook '{wb_name_input}' with type 'basic' created and selected.")
+        logger.debug("commands_utils> change_workbook: Returned 2")
         return 2
     else:
         print("Workbook already exists.")
+        logger.debug("commands_utils> change_workbook: Returned 3")
         return -3
 
 def update_settings_json(query_input: str, manual_update: bool = True) -> None:
@@ -276,8 +296,13 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
         manual_update (bool=True): Default value True means user inserts their data into opened files. False requires 
             writing into query.txt & headers.txt before calling this function.
     """
+    if manual_update:
+        logger.debug("commands_utils> update_settings_json: Called with manual_update=True")
+    else:
+        logger.debug("commands_utils> update_settings_json")
     match query_input:
         case 'query':
+            logger.debug("commands_utils> update_settings_json: Input 'query'")
             if manual_update:
                 os.system(str(FilePaths.settings_path/'query.txt'))
             try:
@@ -294,6 +319,7 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
         case 'market':
+            logger.debug("commands_utils> update_settings_json: Input 'market'")
             with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
             new_market = input("Type a market name: there are no validity checks so make sure the value is "
@@ -302,11 +328,13 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
                             f"Current market value: {settings['market']}.\n"
                             "[update query>market]>>>")
             if new_market != '':
+                logger.debug(f"commands_utils> update_settings_json: Changed market to {new_market}")
                 settings['market'] = new_market
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
                 print(f"Market set as '{new_market}'.")    
         case 'headers':
+            logger.debug("commands_utils> update_settings_json: Input 'headers'")
             if manual_update:
                 os.system(str(FilePaths.settings_path/'headers.txt'))
             try:
@@ -333,6 +361,7 @@ def delete_workbook(wb_name_to_del: str) -> int:
         int:
         1 if no file was deleted; invalid name/doesn't exist. 0 if delete was succesful.
     """
+    logger.debug(f"commands_utils> delete_workbook: Called with name arg {wb_name_to_del}")
     if wb_name_to_del == '_default':
         print("Cannot delete default workbook!")
         return -1
@@ -341,6 +370,7 @@ def delete_workbook(wb_name_to_del: str) -> int:
     elif wb_name_to_del in os.listdir(FilePaths.WB_FILES_ROOT_PATH):
         shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/wb_name_to_del)
         print(f"Workbook '{wb_name_to_del}' contents deleted succesfully!")
+        logger.debug("commands_utils> delete_workbook: Delete succesful'")
         return 0
     else:
         return -1

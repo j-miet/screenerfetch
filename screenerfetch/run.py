@@ -1,6 +1,7 @@
 """Opens and controls the full command line interface program."""
 
 import json
+import logging
 import os
 import shutil
 
@@ -15,12 +16,15 @@ from sheets import WorkbookSheets
 import custom.small_cap1
 #
 
+logger = logging.getLogger('screenerfetch')
+
 def _custom_create(wb_type: str) -> None:
     """Creates workbook for given workbook type..
     
     Args:
         wb_type (str): Workbook type.
     """
+    logger.debug("run> _custom_create")
     # Add workbook creation command of any custom package here
     match wb_type:
         case 'basic':
@@ -30,6 +34,7 @@ def _custom_create(wb_type: str) -> None:
 
 def _select_custom_package() -> None:
     """Selects current custom package based on settings.json "type" value."""
+    logger.debug("run> _custom_package")
     with open(FilePaths.settings_path/'settings.json') as f:
         wb_type = json.load(f)["type"]
     if wb_type in os.listdir(FilePaths.PATH/'custom'):
@@ -41,6 +46,7 @@ def _select_custom_package() -> None:
     print(f"Unsupported custom package type '{wb_type}'.")
 
 def _create_new_wb() -> None:
+    logger.debug("run> _create_new_wb")
     print("Select workbook type.\n# Supported types:\nbasic")
     for type in os.listdir(FilePaths.PATH/'custom'):
         if type.startswith(('_', '.')):
@@ -60,6 +66,7 @@ def _create_new_wb() -> None:
 
 def _initialize_workbook() -> None:
     """Sets initial values for filepaths, workbook sheets and query variables."""
+    logger.debug("run> _initialize_workbook")
     with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
         wb_name_dict = json.load(f)
     FilePaths.wb_name = wb_name_dict["wb_name"]
@@ -144,11 +151,14 @@ def open_cli() -> None:
                     "6. close your workbook and optionally try other commands. Type 'exit' to leave program and to "
                     "create an automatic copy of your workbook.\n"
                     "To make a separate manual copy, use 'copy' instead.")
+    logger.debug("run> entering command loop\n"
+                 "--------------------------")
     while True:
         while FilePaths.wb_name == '_default':
             print("\n***Previously used workbook no longer exists. Select/create a new workbook to proceed.***\n")
             commands.update_wb_file_name()
         user_input = input(f'--------------------\n[main | WB={FilePaths.wb_name} | Type: {QueryVars.wb_type}]>>> ')
+        logger.debug(f"run> Called command '{user_input}'")
         match user_input:
             case 'help':
                 print(HELP_MESSAGE)
@@ -186,7 +196,7 @@ def open_cli() -> None:
                 commands.delete_workbook()
             case 'export wb':
                 commands.export_wb()
-            case 'exit':           
+            case 'exit':
                 shutil.copy2(FilePaths.wb_path, FilePaths.wb_autocopy_path)
                 return
             case 'print':

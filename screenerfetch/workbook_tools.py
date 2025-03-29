@@ -3,6 +3,7 @@
 import copy
 import datetime
 import json
+import logging
 import os
 
 import openpyxl
@@ -13,13 +14,16 @@ from paths import FilePaths
 from query import QueryVars
 from sheets import WorkbookSheets
 
+logger = logging.getLogger('screenerfetch')
+
 def _create_workbook_files() -> None:
+    logger.debug("workbook_tools> _create_workbook_files")
     try:
         for folder_path in (FilePaths.wb_files_path, FilePaths.data_path, FilePaths.settings_path):
             os.mkdir(folder_path)
         print(f"{FilePaths.wb_name}, {FilePaths.wb_name}/settings and {FilePaths.wb_name}/data created.")
     except FileExistsError:
-        ...
+        logger.debug("workbook_tools> _create_workbook_files: At least one of the files already exists")
     with open(FilePaths.settings_path/'settings.json', 'w') as sf:
             set_settings = {"type": "basic", 
                             "market": "global",
@@ -28,6 +32,7 @@ def _create_workbook_files() -> None:
             }
             json.dump(set_settings, sf, indent=4)
     print(f"{FilePaths.wb_name}/settings/settings.json created.")
+    logger.debug("workbook_tools> _create_workbook_files: settings.json created")
     with open(FilePaths.settings_path/'query.txt', 'w') as qf:
         qf.writelines(('{\n', 
                        '    "columns": ["name"],\n', 
@@ -35,12 +40,14 @@ def _create_workbook_files() -> None:
                        '}'
                        ))
     print(f"{FilePaths.wb_name}/settings/query.txt created")
+    logger.debug("workbook_tools> _create_workbook_files: query.txt created")
     with open(FilePaths.settings_path/'headers.txt', 'w') as hf:
         hf.writelines(('{\n', 
                        '   {}', 
                        '\n}'
                        ))
     print(f"{FilePaths.wb_name}/settings/headers.txt created.")
+    logger.debug("workbook_tools> _create_workbook_files: headers.txt created")
 
 def get_last_row(sheet_name: str) -> int:
     """Returns the last non-empty row index of main worksheet.
@@ -55,6 +62,7 @@ def get_last_row(sheet_name: str) -> int:
         int:
         Last non-empty row.
     """
+    logger.debug(f"workbook_tools> get_last_row: Sheet name '{sheet_name}'")
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[sheet_name]
     rows = (len([row for row in ws if not all([row[0].value is None])]))
@@ -71,6 +79,7 @@ def check_date(date_str: str) -> bool:
         bool:
         True if date found, else False.
     """
+    logger.debug(f"workbook_tools> check_date: Date '{date_str}'")
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
     for date in ws['A']:
@@ -95,6 +104,7 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
             date_str: Date in DD/MM/YYYY format.
         date_str (str): Current date.
     """
+    logger.debug("workbook_tools> save")
     AUTO_UPDATE_NUMS = True
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
@@ -114,6 +124,7 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
             current.alignment = Alignment(horizontal='left')
             next_row += 1
         wb.save(FilePaths.wb_path)
+        logger.debug("workbook_tools> save: Data saved succesfully")
         if AUTO_UPDATE_NUMS:
             update_values_to_nums(starting_row)
         print('Saving succesful!')
@@ -129,11 +140,10 @@ def update_values_to_nums(start_row: int = 2) -> None:
      -column characters and numbers match AND
      -make a copy before running this first time, otherwise you could accidentally overwrite important data!
 
-    Jumps over when encountering an error: most typical error is to have TypeError when cell is empty and returns None.
-
     Args:
         start_row (int=2): Row number where updating starts. Default is 2.
     """
+    logger.debug(f"workbook_tools> update_values_to_nums: Start row {start_row}")
     int_columns = QueryVars.int_cols
     xlsx_int_columns = QueryVars.sheet_xlsx_int_cols
     float_columns = QueryVars.float_cols
@@ -148,7 +158,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
                     ws[float_columns[f_col][0]+str(r)] = (
                         f"{float((ws.cell(row=r, column=xlsx_float_columns[f_col]).value)):.2f}") # type: ignore
                 except (TypeError, ValueError):
-                    ...  
+                    ...
             for i_col in range(len(int_columns)):
                 try:
                     ws[int_columns[i_col][0]+str(r)] = (
@@ -156,9 +166,9 @@ def update_values_to_nums(start_row: int = 2) -> None:
                 except (TypeError, ValueError):
                     ...
         wb.save(FilePaths.wb_path)
+        logger.debug("workbook_tools> update_values_to_nums: Numerical values updated.")
         print('Values updated to numbers.')
         return
-    print('Error occured while updating values to numbers...')
 
 def update_datetime(first_row: int = 2) -> None:
     """Update date column values to datetime yyyy-mm-dd format.
@@ -175,6 +185,7 @@ def update_datetime(first_row: int = 2) -> None:
     Args:
         first_row (int=2): Row number where updating begins. Is always >= 2 as row 1 points to headers.
     """
+    logger.debug(f"workbook_tools> update_datetime: First row {first_row}")
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
     if ws is not None:
@@ -193,6 +204,7 @@ def export_wb(type: str) -> None:
     Args:
         type (str): File format - 'txt', 'csv' or 'json'. Can also pass 'all' to export all supported file types.
     """
+    logger.debug(f"workbook_tools> export_wb: Output file type '{type}'")
     df = pd.read_excel(FilePaths.wb_path, WorkbookSheets.sheet_names[0])
     if type == 'txt': 
         df.to_csv(FilePaths.data_path/str(FilePaths.wb_name+'.txt'), sep='\t', index=False)
@@ -216,6 +228,7 @@ def remove_duplicates() -> None:
     
     Uses date and symbol name to differentiate rows: one symbol cannot exists twice on same day.
     """
+    logger.debug("workbook_tools> remove_duplicates")
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
     counter = 0
@@ -233,6 +246,7 @@ def remove_duplicates() -> None:
                     counter += 1
                     print(f"Removed row number {row[0].row}.")
                     break
+    logger.debug(f"workbook_tools> update_values_to_nums: Duplicates removed: {counter}")
     if counter == 1:
         print("1 row was removed.")
     else:
@@ -248,7 +262,11 @@ def create_wb(new_files: bool = True) -> None:
     Args:
         new_files (bool=True): Boolean to determine whether old settings files are overwritten or not; if False, will 
             keep files which enabled custom columns for workbook.
-    """    
+    """
+    if new_files:
+        logger.debug("workbook_tools> create_wb: File overwrite enabled")
+    else:
+        logger.debug("workbook_tools> create_wb")
     FilePaths.update_filepaths()
     if new_files:
         _create_workbook_files()

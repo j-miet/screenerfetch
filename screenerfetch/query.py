@@ -68,12 +68,15 @@ custom_headers = {
 from __future__ import annotations
 import copy
 import json
+import logging
 from typing import TYPE_CHECKING
 
 from paths import FilePaths
 
 if TYPE_CHECKING:
     from typing import Any
+
+logger = logging.getLogger('screenerfetch')
 
 class FetchData:
     """Wrapper class that stores request headers + screener data for excel workbooks.
@@ -148,6 +151,7 @@ class QueryVars:
             list[str]:
             MY_QUERY column values with unused values removed.
         """
+        logger.debug("query.py> QueryVars.get_actual_column_values")
         delete_cols = ["description",
                     "logoid",
                     "update_mode",
@@ -182,6 +186,7 @@ class QueryVars:
             tuple[dict[str,str],list[str],list[str]]:
             a 3-tuple of column headers with their names, integer column headers, and float column headers.
         """
+        logger.debug("query.py> QueryVars.get_column_header_data")
         init_column_headers = {char: name for char, name in zip(header_chars, ['date']+(query_cols))}
         if len(custom_headers.keys()) > 0:
             for header in copy.deepcopy(init_column_headers).keys():
@@ -208,6 +213,7 @@ class QueryVars:
     @staticmethod
     def update_query_variables() -> None:
         """Updates all QueryVars values."""
+        logger.debug("query.py> QueryVars.update_query_variables")
         with open(FilePaths.settings_path/'settings.json') as f:
             current_settings = json.load(f)
         QueryVars.market = current_settings['market']
@@ -219,6 +225,7 @@ class QueryVars:
         try:
             QueryVars.actual_columns = QueryVars.get_actual_column_values(QueryVars.my_query['columns']) # type: ignore
         except KeyError:
+            logger.debug("query.py> QueryVars.update_query_variables: KeyError, settings.json query columns missing.")
             print("No query columns detected, please update query.txt immediately!")
             QueryVars.actual_columns = QueryVars.get_actual_column_values(["name"])
         QueryVars.header_chars = [
@@ -234,3 +241,4 @@ class QueryVars:
                                                                         ord(QueryVars.last_col)+1)))] 
         QueryVars.sheet_xlsx_int_cols  = [ord(col_header[0].lower())-96 for col_header in QueryVars.int_cols]
         QueryVars.sheet_xlsx_float_cols = [ord(col_header[0].lower())-96 for col_header in QueryVars.float_cols]
+        logger.debug("query.py> QueryVars.update_query_variables: All values updated")
