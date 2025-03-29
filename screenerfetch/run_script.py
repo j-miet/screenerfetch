@@ -23,6 +23,7 @@ def execute_args_commands() -> None:
     This means writing 'py screenerfetch -f -c --export -sa' does -f -> -sa -> -c -> --export.
     """
     parser = argparse.ArgumentParser("screenerfetch")
+    parser.add_argument("-log", action='store_true')
     parser.add_argument("-wb", "--change-wb", nargs=1, type=str,
                          help="change to another existing workbook or create a new one")
     parser.add_argument("-f", "--fetch", action='store_true',
@@ -42,7 +43,6 @@ def execute_args_commands() -> None:
     args = parser.parse_args()
     
     run._initialize_workbook()
-
     if args.change_wb:
         with open(FilePaths.settings_path/'settings.json') as f:
             settings = json.load(f)
