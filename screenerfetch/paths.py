@@ -1,6 +1,10 @@
 """FilePaths class."""
 
+import logging
+
 from pathlib import Path
+
+logger = logging.getLogger('screenerfetch')
 
 class FilePaths:
     """File paths and static method upgrade_filepaths to update them."""
@@ -23,6 +27,7 @@ class FilePaths:
     @staticmethod
     def update_filepaths() -> None:
         """Updates all workbook file paths."""
+        logger.debug("paths> Filepaths.update_filepaths")
         FilePaths.wb_files_path = FilePaths.PATH/'workbooks'/FilePaths.wb_name
         FilePaths.data_path = FilePaths.wb_files_path/'data'
         FilePaths.settings_path = FilePaths.wb_files_path/'settings'
@@ -33,3 +38,4 @@ class FilePaths:
         FilePaths.wb_path = FilePaths.wb_files_path/f'{FilePaths.wb_name}.xlsx'
         FilePaths.wb_autocopy_path = FilePaths.wb_files_path/f'{FilePaths.wb_autocopy_name}.xlsx'
         FilePaths.wb_manual_copy_path= FilePaths.wb_files_path/f'{FilePaths.wb_manual_copy_name}.xlsx'
+        logger.debug("paths> Filepaths.update_filepaths: Updated file paths")

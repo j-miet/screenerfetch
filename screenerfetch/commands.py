@@ -1,6 +1,7 @@
 """CLI commands."""
 
 import json
+import logging
 import os
 import shutil
 
@@ -10,11 +11,14 @@ from query import QueryVars, FetchData
 from sheets import WorkbookSheets
 import workbook_tools
 
+logger = logging.getLogger('screenerfetch')
+
 def update_query() -> None:
     """Handles query-related updates using text and json files.
     
     Note that changing query and/or headers will also impact your xlsx file column names.
     """
+    logger.debug("commands> update_query")
     QUERY_HELP= (
         '##########################################\n'
         'If you want to set up your current TradingView screener settings, the easiest way is:\n'
@@ -70,10 +74,12 @@ def update_query() -> None:
                 input("\n~Press Enter to continue...")
                 print(QUERY_COMMANDS_HELP)
             case 'back':
+                logger.debug("commands.py> update_commands: Input 'back'")
                 QueryVars.update_query_variables()
                 print('Query values updated.')
                 return    
             case _:
+                logger.debug(f"commands.py> update_commands: Input '{user_input}'")
                 commands_utils.update_settings_json(user_input)
 
 def update_wb_file_name(select_wb: list[str] = []) -> None:
@@ -83,6 +89,7 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
         select_wb (list[str] = []): Workbook name. This variable should only be passed if screenerfetch is passed 
             command line arguments. For this reason, it also has type list[str] instead of str.
     """
+    logger.debug("commands.py> update_wb_file_name")
     name_input: str | list[str] = []
     all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
     for f_name in all_workbooks[:]:
@@ -98,6 +105,7 @@ def update_wb_file_name(select_wb: list[str] = []) -> None:
         for wb in all_workbooks:
             print(wb)
         name_input = input("====================\n[change wb]>>>")
+        logger.debug("commands.py> update_wb_file_name: Name input")
     if commands_utils.check_wb_name_validity(name_input) == -1:
         return
     elif name_input in all_workbooks:
@@ -118,6 +126,7 @@ def fetch() -> int:
         int:
         0 if fetching and data creation was succesful, -1 if empty dataframe was fetched.
     """
+    logger.debug("commands.py> fetch")
     print('[fetch]->fetching data... ', end='')
     request_data_json = commands_utils.requests_api_data()
     if request_data_json['totalCount'] != 0:
@@ -129,6 +138,7 @@ def fetch() -> int:
         print('\n-> Done!')
         return 0
     else:
+        logger.debug("commands.py> fetch: Empty dataframe returned.")
         print('Query returned an empty dataframe, no fetch data was saved.')
         return -1
 
@@ -140,6 +150,7 @@ def save() -> None:
     they wish to include data from. After saving and closing text file, workbook_tools function save()
     is called which handles the formatting and saving data to the workbook.
     """
+    logger.debug("commands.py> save")
     print('[save]->', end='')
     if FetchData.query_data == []:
             print('No data available to save. Fetch data before you attempt to save it.')
@@ -154,8 +165,10 @@ def saveall() -> None:
     """Saves all fetched symbol data.
 
     Like save(), to find data, at least one fetch() call has is needed during program runtime."""
+    logger.debug("commands.py> saveall")
     print('[saveall]->', end='')
     if FetchData.query_data == []:
+            logger.debug("commands.py> saveall: No query data")
             print('No data available to save. Fetch data before you attempt to save it.')
             return
     print('saving all...')
@@ -170,9 +183,11 @@ def print_query() -> None:
 
 def update_date_format() -> None:
     """Updates dates to current format."""
+    logger.debug("commands.py> update_date_formet")
     first_row = input('Give a row number (>= 2) where updating starts. Base value is 2:'+
                       ' for this, leave empty input.\n'
                       '[update date]>>>')
+    logger.debug(f"commands.py> update_date_format: Input '{first_row}'")
     if first_row == '':
         workbook_tools.update_datetime(2)
     else:
@@ -186,6 +201,7 @@ def update_to_nums() -> None:
     
     To change selected columns, edit CUSTOM_HEADERS in query.py.
     """
+    logger.debug("commands.py> update_to_nums")
     verify = input('This process can possible overwrite important data - make sure you have copied'
                    'your current workbook.\n'
                    'To proceed, type "yes".\n'
@@ -197,6 +213,7 @@ def update_to_nums() -> None:
 
 def export_wb() -> None:
     """Exports current workbook data and saves it in selected type."""
+    logger.debug("commands.py> export_wb")
     file_type = input('Enter a file type from the following list:\n'
                       'txt, csv, json\n'+
                       'You can also select \'all\' to create all files.\n'+
@@ -209,21 +226,25 @@ def export_wb() -> None:
 
 def show_txt() -> None:
     """Opens the symbol data text file."""
+    logger.debug("commands.py> show_txt")
     print(f"[txt]->displaying {FilePaths.TXT_NAME}.txt...")
     os.system(str(FilePaths.TXT_PATH))
 
 def show_xlsx() -> None:
     """Opens the main xlsx file."""
+    logger.debug("commands.py> show_xlsx")
     print(f"[excel]->displaying {FilePaths.wb_name}.xlsx...")
     os.system(str(FilePaths.wb_path))
     WorkbookSheets.update_sheets()
 
 def remove_duplicate_data() -> None:
     """Remove duplicate row data from workbook."""
+    logger.debug("commands.py> remove_duplicate_data")
     workbook_tools.remove_duplicates()
 
 def copy() -> None:
     """Makes a hard copy of the current xlsx workbook file."""
+    logger.debug("commands.py> copy")
     if input('Are you sure you want to make a hard copy? Type "yes" to copy, or anything else to leave.'
              '\n[copy]>>>').lower() == 'yes':
         try:
@@ -241,10 +262,12 @@ def create(create_new: bool = True) -> None:
         create_new (bool=True): True to create wb with default type files, False to keep existing files so that 
             workbook has updated columns.
     """
+    logger.debug("commands.py> create")
     workbook_tools.create_wb(create_new)
 
 def delete_workbook() -> None:
     """Deletes any existing workbook that is not currently in use."""
+    logger.debug("commands.py> delete_workbook")
     print("Select the workbook you'd like to *delete permanently*.")
     all_workbooks = os.listdir(FilePaths.WB_FILES_ROOT_PATH)
     for f_name in all_workbooks[:]:
@@ -253,14 +276,18 @@ def delete_workbook() -> None:
     for wb in all_workbooks:
         print(wb)
     del_input = input("[delete wb]>>>")
+    logger.debug(f"commands.py> delete_workbook: Input '{del_input}'")
     if del_input == FilePaths.wb_name:
+        logger.debug("commands.py> delete_workbook: Cannot delete wb")
         print("Cannot delete currently used workbook. Halting deletion process.")
         return
     if del_input in all_workbooks and del_input != '_default':
         confirm = input(f"Are you absolutely sure you'd wish to remove '{del_input}'?\n"
                         "Type 'delete wb' to proceed, or anything else to halt deleting process.\n"
                         "[delete wb]>>>")
+        logger.debug(f"commands.py> delete_workbook: Confirm input '{confirm}'")
         if confirm == 'delete wb':
             commands_utils.delete_workbook(del_input)
             return
+    logger.debug("commands.py> delete_workbook: No wb deleted")
     print("No workbook was deleted this time.")
