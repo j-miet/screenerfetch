@@ -1,1 +1,1 @@
-python screenerfetch -f -a -c
+python screenerfetch -wb test -f -a -c
