@@ -1,30 +1,16 @@
 """Mock query data for unit testing."""
 
-from query import QueryVars
-
 query_test = {
     'markets': ['america'],
     'options': {'lang': 'en'},
     'columns': ['name',
-                "description",
-                "logoid",
-                "update_mode",
-                "type",
-                "typespecs",
                 'open',
-                "pricescale",
-                "minmov",
-                "fractional",
-                "minmove2",
-                "currency",
                 'close', 
                 'low',
                 'high', 
                 'volume',
                 'float_shares_outstanding_current',
-                "fundamental_currency_code",
-                'market_cap_basic',
-                "exchange"
+                'market_cap_basic'
                 ],
     'filter': [{'left' : 'market_cap_basic', 'operation' : 'greater', 'right' : 1e11},
                 {'left' : 'typespecs', 'operation' : 'has', 'right' : ['common']},
@@ -53,8 +39,7 @@ settings_test = {
     'query': query_test
 }
 
-actual_columns_test = QueryVars.get_actual_column_values(query_test['columns']) # type: ignore
-header_chars_test = [f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(actual_columns_test)+1)))]
+header_chars_test = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
 
 json_data_test = {'totalCount': 110, 
             'data': [

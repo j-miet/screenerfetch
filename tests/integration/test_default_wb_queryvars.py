@@ -26,9 +26,6 @@ def test_update_query_variables_with_default():
     assert QueryVars.custom_headers == {}
     assert QueryVars.wb_type == "basic"
 
-    assert QueryVars.actual_columns == [
-        'name',
-        ]
     assert QueryVars.header_chars == ['A','B']
     assert (QueryVars.col_headers, QueryVars.int_cols, QueryVars.float_cols) == (
         {'A1': 'date', 'B1': 'name'},
@@ -37,8 +34,6 @@ def test_update_query_variables_with_default():
     )
 
     assert QueryVars.date_col == 'A'
-    assert QueryVars.first_col == 'B'
-    assert QueryVars.last_col == 'B'
     assert QueryVars.txt_headers == ['B1']
     assert QueryVars.sheet_xlsx_int_cols == []
     assert QueryVars.sheet_xlsx_float_cols == []

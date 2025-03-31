@@ -52,13 +52,11 @@ def test_requests_api_data(mocker, query_vars):
     "name", "open", "close", "low", "high", "volume", "float_shares_outstanding_current", "market_cap_basic"
 ])
 def test_clean_fetched_data(column: str, query_vars):
-    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(helper_data.actual_columns_test,
-                                                                                        {}, 
-                                                                                        helper_data. header_chars_test)
-    query_vars.first_col = [header[0] for header in query_vars.col_headers.keys()][1]
-    query_vars.last_col = [header[0] for header in query_vars.col_headers.keys()][-1]
-    query_vars.txt_headers = [
-        f'{char}1' for char in list(map(chr,range(ord(query_vars.first_col),ord(query_vars.last_col)+1)))]
+    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(
+        helper_data.query_test["columns"],
+        {}, 
+        helper_data. header_chars_test)
+    query_vars.txt_headers = [header for header in list(query_vars.col_headers)[1:]]
 
     test_df: pd.DataFrame = commands_utils.clean_fetched_data(helper_data.json_data_test)
     expected_df = pd.DataFrame(
@@ -83,13 +81,11 @@ def test_clean_fetched_data(column: str, query_vars):
     "Symbol", "open", "close", "low", "High", "volume", "Float", "Market Cap"
 ])
 def test_clean_fetched_data_custom_headers(column: str, query_vars):
-    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(helper_data.actual_columns_test,
-                                                                                    helper_data.headers_test, 
-                                                                                    helper_data. header_chars_test)
-    query_vars.first_col = [header[0] for header in query_vars.col_headers.keys()][1]
-    query_vars.last_col = [header[0] for header in query_vars.col_headers.keys()][-1]
-    query_vars.txt_headers = [
-        f'{char}1' for char in list(map(chr,range(ord(query_vars.first_col),ord(query_vars.last_col)+1)))]
+    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(
+        helper_data.query_test["columns"],
+        helper_data.headers_test, 
+        helper_data. header_chars_test)
+    query_vars.txt_headers = [header for header in list(query_vars.col_headers)[1:]]
     query_vars.int_cols = ['D1', 'F1', 'I1']
 
     test_df = commands_utils.clean_fetched_data(helper_data.json_data_test)
@@ -119,13 +115,11 @@ def test_create_fetch_display_txt(mocker):
     assert mock_write.call_count == 2
 
 def test_create_screener_data(query_vars):
-    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(helper_data.actual_columns_test,
-                                                                                        {}, 
-                                                                                        helper_data. header_chars_test)
-    query_vars.first_col = [header[0] for header in query_vars.col_headers.keys()][1]
-    query_vars.last_col = [header[0] for header in query_vars.col_headers.keys()][-1]
-    query_vars.txt_headers = [
-        f'{char}1' for char in list(map(chr,range(ord(query_vars.first_col),ord(query_vars.last_col)+1)))]
+    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(
+        helper_data.query_test["columns"],
+        {}, 
+        helper_data. header_chars_test)
+    query_vars.txt_headers = [header for header in list(query_vars.col_headers)[1:]]
 
     test_df: pd.DataFrame = commands_utils.clean_fetched_data(helper_data.json_data_test)
     df_dict = test_df.to_dict()
