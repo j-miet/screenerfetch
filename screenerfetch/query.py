@@ -111,70 +111,42 @@ class QueryVars:
     custom_headers: dict[str, dict[str, str]]
     wb_type: str
 
-    actual_columns: list[str]
     header_chars: list[str]
     col_headers: dict[str, str]
     int_cols: list[str]
     float_cols: list[str]
 
     date_col: str
-    first_col: str
-    last_col: str
     txt_headers: list[str]
     sheet_xlsx_int_cols: list[int]
     sheet_xlsx_float_cols: list[int]
 
     @staticmethod
-    def get_actual_column_values(my_query: list[str]) -> list[str]:
-        """Removes irrelevant column values from MY_QUERY.
-        
-        The web JSON request header has some column values that are not relevant to screenering: they are removed. 
-        Currently, those values are:
+    def get_header_values() -> list[str]:
+        """Return xlsx column character list depending on length of provided query columns.
 
-        "description",
-        "logoid",
-        "update_mode",
-        "type",
-        "typespecs",
-        "pricescale",
-        "minmov",
-        "fractional",
-        "minmove2",
-        "currency",
-        "fundamental_currency_code",
-        "exchange"
-
-        Args:
-            my_query (list[str]): Columns of MY_QUERY i.e. query.MY_QUERY['columns']
+        Support up to 52 values (date + 51 query column values). Exceeding this limit will cause a crash.
 
         Returns:
             list[str]:
-            MY_QUERY column values with unused values removed.
+            List of all required excel column letters.
         """
-        logger.debug("query.py> QueryVars.get_actual_column_values")
-        delete_cols = ["description",
-                    "logoid",
-                    "update_mode",
-                    "type",
-                    "typespecs",
-                    "pricescale",
-                    "minmov",
-                    "fractional",
-                    "minmove2",
-                    "currency",
-                    "fundamental_currency_code",
-                    "exchange"]
-        actual_cols = my_query
-        for col in copy.copy(actual_cols):
-            if col in delete_cols:
-                actual_cols.remove(col)
-        return actual_cols
+        total_cols = len(QueryVars.my_query["columns"])
+        header_chrs = [
+                f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(QueryVars.my_query["columns"][:25])+1)))]
+        if 26 <= total_cols <= 52:
+            header_chrs += [
+                f'A{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(QueryVars.my_query["columns"][25:]))))]
+        if total_cols > 52:
+            print("Column characters exceed 52. Returning empty list.")
+            return []
+        return header_chrs
 
     @staticmethod
     def get_column_header_data(query_cols: list[str],
-                                    custom_headers: dict[str, dict[str, Any]],
-                                    header_chars: list[str]
-                                    ) -> tuple[dict[str, str], list[str], list[str]]:
+                                custom_headers: dict[str, dict[str, Any]],
+                                header_chars: list[str]
+                                ) -> tuple[dict[str, str], list[str], list[str]]:
         """Updates column values with custom names and lists all integer and float-valued columns.
 
         Args:
@@ -222,23 +194,13 @@ class QueryVars:
         QueryVars.custom_headers = current_settings['headers']
         QueryVars.wb_type = current_settings['type']
 
-        try:
-            QueryVars.actual_columns = QueryVars.get_actual_column_values(QueryVars.my_query['columns']) # type: ignore
-        except KeyError:
-            logger.debug("query.py> QueryVars.update_query_variables: KeyError, settings.json query columns missing.")
-            print("No query columns detected, please update query.txt immediately!")
-            QueryVars.actual_columns = QueryVars.get_actual_column_values(["name"])
-        QueryVars.header_chars = [
-            f'{c}' for c in list(map(chr,range(ord('A'), ord('A')+len(QueryVars.actual_columns)+1)))]
+        QueryVars.header_chars = QueryVars.get_header_values()
         QueryVars.col_headers, QueryVars.int_cols, QueryVars.float_cols  = QueryVars.get_column_header_data( 
-                                                                            QueryVars.actual_columns, 
+                                                                            QueryVars.my_query["columns"], 
                                                                             QueryVars.custom_headers, 
                                                                             QueryVars.header_chars)
         QueryVars.date_col = [header[0] for header in QueryVars.col_headers.keys()][0]
-        QueryVars.first_col = [header[0] for header in QueryVars.col_headers.keys()][1]
-        QueryVars.last_col = [header[0] for header in QueryVars.col_headers.keys()][-1]
-        QueryVars.txt_headers = [f'{char}1' for char in list(map(chr,range(ord(QueryVars.first_col),
-                                                                        ord(QueryVars.last_col)+1)))] 
+        QueryVars.txt_headers = [header for header in list(QueryVars.col_headers)[1:]]
         QueryVars.sheet_xlsx_int_cols  = [ord(col_header[0].lower())-96 for col_header in QueryVars.int_cols]
         QueryVars.sheet_xlsx_float_cols = [ord(col_header[0].lower())-96 for col_header in QueryVars.float_cols]
         logger.debug("query.py> QueryVars.update_query_variables: All values updated")
