@@ -25,17 +25,35 @@ def update_query() -> None:
         '-open your TradingView screener page, with your desired screener as currently selected.\n'
         '-press F12 and refresh your page (F5).\n'
         '-then have "Network" selected and below it you see "Filter URLs" search box.\n'
-        '-now type "scanner" in that box, wait a second or two, then select the top one.\n'
-        '-A window opens: choose "Requests" page -> right-click and select Copy All => AND KEEP THE WEB PAGE OPEN!\n'
+        '-now type "scanner" in that box, wait a second or two.'
+        ' There should be a few matches, all with 200 status and with method GET or POST.\n'
+        ' From the ones saying POST, select the top one/one with \'scan?!label-product=screener-stock\''
+        ' under File header.\n'
+        '-A window extend to right: select "Requests" page -> right-click and select Copy All.\n'
         '-You have your query in clipboard so click back to this program, type "query" and press Enter\n'
         '-A text file pops up: it contains your current query - if it\'s empty, paste the one you just copied.\n'
-        '>You\'ve set your query! Next you need to set the market where symbols are searched from:\n\n'
+        '>Your query columns under "columns" will likely include some extra entries. For example, minimal \n'
+        'column list which you get with just including "name" (which by the way, must be included or you\'re in ' 'trouble) becomes\n\n'
 
-        '-back to developer tools: now select the 3. row/the one below "cached" on the left panel.\n'
-        '-again, you choose "Requests", but now scrolls all the way down: there should be a markets section with a' 
-        'country name\n'
-        'click back to program, type "market" and write your market value, then press Enter.\n'
-        '*Note* if you want to search over multiple markets, say "us" and "canada", then type "global" instead!\n'
+        '[\n'
+        '   "name",\n'
+        '   "description",\n'
+        '   "logoid",\n'
+        '   "update_mode",\n'
+        '   "type",\n'
+        '   "typespecs",\n'
+        '   "exchange"\n'
+        ']\n\n'
+        'To find out what these columns do, you can always save the query, return to main commands, fetch data and '
+        'check the fetched data with \'txt\' command.\n' 
+        '.\n.\n.\n'
+        '-the other thing you need is market value: this determines the region(s) where your query searches data.\nTo'
+        ' find it, open your previous query/query.txt and find the "markets" section.\n' 
+        ' If you use only a single region, say "uk", then there should only be that string - this is your market '
+        ' value. However, if you have multiple regions e.g. "america, canada, germany",\n'
+        ' then you must use "global" instead.'
+        '-click back to program, type "market" and write your market value, then press Enter. Make sure there are no '
+        ' typos!\n'
 
         '---This is everything you need...but if you wish to customize your column names for txt/excel files, check '
         'this out:----\n\n'
@@ -47,15 +65,14 @@ def update_query() -> None:
         '"D" : {"name": "Price", "type": "float"},\n'
         '"F" : {"name": "Volume", "type": "int"},\n'
         '}\n\n'
-        'letters refer to correspondig workbook columns, name is the column name and type is the column value type.\n'
+        'letters refer to corresponding workbook columns, name is the column name and type is the column value type.\n'
         'Supported type values are "int" or "float": these ensure that numbers are either rounded down to an '
-        'integer, or are rounded down to 2 decimals points\n'
+        'integer, or are rounded to 2 decimals points. These also ensure excel doesn\'t complain about using string '
+        'value with numbers in xlsx files.\n'
         'Neither of the name/type values are necessary so you can have name, but not type and vice versa.\n'
         'And if you want to leave default name values and don\'t care about rounding, remove the entire row!\n'
-        '#ONLY EXCEPTION is the date row \'"A" : {"name": "Date"}\': this must always exists (name you can still '
-        'customize).\n'
-        '#supports only characters A-Z; if your workbook exceeds this column limit, you need to use base values for '
-        'the rest')
+        '#Note that date column is always A; rest depend on the order they appear in query columns.'
+        '#supports excel columns A-Z and AA-AZ; if your workbook exceeds this limit of 52 names, program crashes.')
     QUERY_COMMANDS_HELP = (
             '/////////////////////////////\n'
             'Query commands:\n'
@@ -124,19 +141,26 @@ def fetch() -> int:
     
     Returns:
         int:
-        0 if fetching and data creation was succesful, -1 if empty dataframe was fetched.
+        0 if fetching and data creation was succesful  
+        -1 if empty dataframe was fetched.  
+        1 if dataframe has symbols, but they have no extractable data due to missing columns in settings.json.
     """
     logger.debug("commands.py> fetch")
     print('[fetch]->fetching data... ', end='')
     request_data_json = commands_utils.requests_api_data()
     if request_data_json['totalCount'] != 0:
-        dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
-        dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
-        dataframe_dict = dataframe_cleaned.to_dict()
-        commands_utils.create_fetch_display_txt(dataframe_str_list)
-        FetchData.query_data = commands_utils.create_screener_data(dataframe_dict)
-        print('\n-> Done!')
-        return 0
+        if request_data_json['data'][0]['d'] != []:
+            dataframe_cleaned = commands_utils.clean_fetched_data(request_data_json)
+            dataframe_str_list = dataframe_cleaned.to_string(index=False).split('\n')
+            dataframe_dict = dataframe_cleaned.to_dict()
+            commands_utils.create_fetch_display_txt(dataframe_str_list)
+            FetchData.query_data = commands_utils.create_screener_data(dataframe_dict)
+            print('\n-> Done!')
+            return 0
+        else:
+            print("\nERROR: Query found symbols, but can't return data due to missing columns in settings.json.\n"
+                "Check your query in query.txt and verify it has at least one valid value under \"columns\".")
+            return -1
     else:
         logger.debug("commands.py> fetch: Empty dataframe returned.")
         print('Query returned an empty dataframe, no fetch data was saved.')

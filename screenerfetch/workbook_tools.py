@@ -88,7 +88,7 @@ def check_date(date_str: str) -> bool:
     print("Date value not found.")
     return False
 
-def save(symbol_data: list[list[str]], date_str: str) -> None:
+def save(symbol_data: list[list[str]], date_str: str, auto_update_nums: bool = True) -> None:
     """Saves passed symbol_data to the main workbook file.
     
     Adds the date_str in front of symbol_data before adding all the symbol data workbook.
@@ -103,9 +103,9 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
         symbol_data (list[list[str]]): 2D list where each inner list contains all data for a specific symbol.
             date_str: Date in DD/MM/YYYY format.
         date_str (str): Current date.
+        auto_update_nums (bool): Whether to call auto-update current int and float columns. Default is True.
     """
     logger.debug("workbook_tools> save")
-    AUTO_UPDATE_NUMS = True
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
     ws = wb[WorkbookSheets.sheet_names[0]]
@@ -125,7 +125,7 @@ def save(symbol_data: list[list[str]], date_str: str) -> None:
             next_row += 1
         wb.save(FilePaths.wb_path)
         logger.debug("workbook_tools> save: Data saved succesfully")
-        if AUTO_UPDATE_NUMS:
+        if auto_update_nums:
             update_values_to_nums(starting_row)
         print('Saving succesful!')
         return
