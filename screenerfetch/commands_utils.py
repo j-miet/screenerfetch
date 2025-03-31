@@ -78,10 +78,14 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
         'd' contains all data columns, filtered accordingly to your query, in a list-like format. It preserves order of 
         columns from MY_QUERY so you can easily pinpoint which value corresponds to which.
 
-    Any float-type value is rounded to 2 decimals with column:.2f. This also means they get converted to strings. 
+    Notes:
+    1. Any float-type value is rounded to 2 decimals with column:.2f. This also means they get converted to strings. 
     As pandas has only types int64, float64 and object, it means dataframe has types int64 for integers or object for 
     anything else.
     Rounding will also save zero digits: e.g. 100.001 becomes 100.00, 100.999 becomes 101.00.
+
+    2. If value is a list e.g. with query has column 'typespecs' which returns list objects like ['prefered'], all list 
+    elements are joined as string with comma as separator.
 
     Args:
         request_data (Any): JSON data dictionary object fetched from TradingView web API.
@@ -91,23 +95,28 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
             Cleaned fetch data.
     """
     logger.debug("commands_utils> clean_fetched_data")
+    current_data = []
     raw_data = []
     for data in request_data['data']:
         raw_temp = []
         for column in data['d']:
             raw_temp.append(column)
         raw_data.append(raw_temp)
+    current_data = raw_data
 
-    rounded = []
-    for symbol_data in raw_data:
+    modified = []
+    for symbol_data in current_data:
         newcolumn = []
         for column in symbol_data:
             if isinstance(column, float):
                 column = f"{column:.2f}"
+            elif isinstance(column, list):
+                column = ', '.join(column)
             newcolumn.append(column)
-        rounded.append(newcolumn)
+        modified.append(newcolumn)
+    current_data = modified
 
-    txt_dataframe = pd.DataFrame(data=rounded, 
+    txt_dataframe = pd.DataFrame(data=current_data, 
                                  columns=[QueryVars.col_headers[header] for header in QueryVars.txt_headers])
     try:
         target_cols = [QueryVars.col_headers[headers] for headers in QueryVars.int_cols]
@@ -115,7 +124,14 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
             txt_dataframe[col] = txt_dataframe[col].apply(round_to_int)
     except AttributeError:
         ...
+    try:
+        target_cols = [QueryVars.col_headers[headers] for headers in QueryVars.float_cols]
+        for col in target_cols:
+            txt_dataframe[col] = txt_dataframe[col].apply(lambda t: f"{float(t):.2f}")
+    except AttributeError:
+        ...
     return txt_dataframe
+    
 
 def create_fetch_display_txt(df_string: list[str]) -> None:
     """Creates a displayable txt file for symbol data saving process.
