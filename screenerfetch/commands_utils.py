@@ -33,17 +33,17 @@ def get_date() -> str:
     year, month, day = current[0], current[1], current[2]
     return day+'/'+month+'/'+year
 
-def round_to_int(value: float | None) -> int | str:
+def round_to_int(value: float | int | str) -> int | str:
     """Returns floor integer value of a float.
     
     Args:
-        value (float | None): Float or empty value.
+        value (float | int | str): Float, int or '-' for pandas NaN values.
 
     Returns:
         int/str:
-        Either a integer value, or '-' if value if NoneType.
+        Either an integer or '-'.
     """
-    if value is not None: 
+    if value != '-': 
         return int(float(value))
     else:
         return '-'
@@ -108,9 +108,7 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
     for symbol_data in current_data:
         newcolumn = []
         for column in symbol_data:
-            if isinstance(column, float):
-                column = f"{column:.2f}"
-            elif isinstance(column, list):
+            if isinstance(column, list):
                 column = ', '.join(column)
             newcolumn.append(column)
         modified.append(newcolumn)
@@ -118,6 +116,7 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
 
     txt_dataframe = pd.DataFrame(data=current_data, 
                                  columns=[QueryVars.col_headers[header] for header in QueryVars.txt_headers])
+    txt_dataframe = txt_dataframe.fillna('-')
     try:
         target_cols = [QueryVars.col_headers[headers] for headers in QueryVars.int_cols]
         for col in target_cols:
@@ -126,8 +125,14 @@ def clean_fetched_data(request_data: Any) -> pd.DataFrame:
         ...
     try:
         target_cols = [QueryVars.col_headers[headers] for headers in QueryVars.float_cols]
+        decimals = {QueryVars.col_headers[headers]: QueryVars.float_decimals[headers] for headers in QueryVars.
+                    float_decimals.keys()}
         for col in target_cols:
-            txt_dataframe[col] = txt_dataframe[col].apply(lambda t: f"{float(t):.2f}")
+            try:
+                decimal_val = decimals[col]
+                txt_dataframe[col] = txt_dataframe[col].apply(lambda t: f"{float(t):.{decimal_val}f}")
+            except KeyError:
+                ...
     except AttributeError:
         ...
     return txt_dataframe
@@ -305,10 +310,12 @@ def change_workbook(wb_name_input: str, new: bool, check_name: bool = True) -> i
         return -3
 
 def update_settings_json(query_input: str, manual_update: bool = True) -> None:
-    """Updates settings.json query, market and header values for current workbook.
+    """Updates settings.json query and header values for current workbook.
+
+    Also auto-updates market value based on your query.
     
     Args:
-        query_input (str): 'query', 'market' or 'headers'.
+        query_input (str): 'query' or 'headers'.
         manual_update (bool=True): Default value True means user inserts their data into opened files. False requires 
             writing into query.txt & headers.txt before calling this function.
     """
@@ -329,26 +336,15 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
                         current_query = json.load(f)
                 with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
-                settings['query'] = current_query
+                settings["query"] = current_query
+                if len(current_query["markets"]) > 1:
+                    settings["market"] = "global"
+                else:
+                    settings["market"] = current_query["markets"][0]
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
             except json.decoder.JSONDecodeError:
-                print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
-        case 'market':
-            logger.debug("commands_utils> update_settings_json: Input 'market'")
-            with open(FilePaths.settings_path/'settings.json') as f:
-                    settings = json.load(f)
-            new_market = input("Type a market name: there are no validity checks so make sure the value is "
-                            "correct!\n"
-                            "Empty input will keep the current value.\n"
-                            f"Current market value: {settings['market']}.\n"
-                            "[update query>market]>>>")
-            if new_market != '':
-                logger.debug(f"commands_utils> update_settings_json: Changed market to {new_market}")
-                settings['market'] = new_market
-                with open(FilePaths.settings_path/'settings.json', 'w') as f:
-                    json.dump(settings, f, indent=4)
-                print(f"Market set as '{new_market}'.")    
+                print('Invalid json text given. Make sure all properties are enclosed in double quotes.') 
         case 'headers':
             logger.debug("commands_utils> update_settings_json: Input 'headers'")
             if manual_update:
