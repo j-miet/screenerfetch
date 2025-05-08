@@ -147,6 +147,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
     int_columns = QueryVars.int_cols
     xlsx_int_columns = QueryVars.sheet_xlsx_int_cols
     float_columns = QueryVars.float_cols
+    float_decimals = QueryVars.float_decimals
     xlsx_float_columns = QueryVars.sheet_xlsx_float_cols
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
@@ -155,9 +156,10 @@ def update_values_to_nums(start_row: int = 2) -> None:
         for r in range(start_row, get_last_row(WorkbookSheets.sheet_names[0])+1):
             for f_col in range(len(float_columns)):
                 try:
+                    decimals = float_decimals[float_columns[f_col]+'1']
                     ws[float_columns[f_col][0]+str(r)] = (
-                        f"{float((ws.cell(row=r, column=xlsx_float_columns[f_col]).value)):.2f}") # type: ignore
-                except (TypeError, ValueError):
+                        f"{float((ws.cell(row=r, column=xlsx_float_columns[f_col]).value)):.{decimals}f}") # type: ignore
+                except (TypeError, ValueError, KeyError):
                     ...
             for i_col in range(len(int_columns)):
                 try:
