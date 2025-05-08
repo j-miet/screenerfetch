@@ -209,6 +209,7 @@ def show_distributions() -> None:
     df = pd.read_excel(FilePaths.wb_path, 0, header=0, 
                        usecols=['Open', 'High', 'Chg from Open %', 'Float', 'Market Cap'])
     df['High-to-Open %'] = ((df['High']/df['Open'])-1)*100
+    df['High-to-Open %'] = df['High-to-Open %'].replace([np.inf, -np.inf], 0) # replace infinites with 0
 
     df_mc = df['Market Cap'].loc[df['Market Cap'] != '-']
     df_f = df['Float'].loc[df['Float'] != '-']
@@ -303,6 +304,7 @@ def show_high_to_open_vs_float_and_mc() -> None:
 
     df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Open', 'High', 'Float', 'Market Cap'])
     df['High-to-Open %'] = ((df['High']/df['Open'])-1)*100
+    df['High-to-Open %'] = df['High-to-Open %'].replace([np.inf, -np.inf], 0) # replace infinites with 0
     df = df[['Float', 'High-to-Open %', 'Market Cap']].loc[(df['Float'] != '-') & (df['Market Cap'] != '-')]
 
     font_x= {'family':'serif','color':'cornflowerblue','size':14}
