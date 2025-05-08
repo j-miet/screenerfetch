@@ -32,7 +32,7 @@ def execute_args_commands() -> None:
     parser.add_argument("-s", "--save", action='store_true',
                          help="opens api_data.txt where you can select which symbols to save in current xlsx file"
                          "Saving is possible only after data has been fetched with -f/--fetch")
-    parser.add_argument("-a", "--saveall", action='store_true',
+    parser.add_argument("-sa", "--saveall", action='store_true',
                          help="save all fetched data in .xlsx file. Saving is possible only after "
                          "data has been fetched with -f/--fetch")
     parser.add_argument("-c", "--autocopy", action='store_true',
