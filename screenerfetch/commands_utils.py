@@ -208,7 +208,7 @@ def select_saved_objects() -> tuple[bool, list[list[str]]]:
                     symbols.append(elem[pos+1: pos+1+symbol_end])
                     break
     check = False
-    added_symbols: list[list[str]] = []
+    added_symbols: list[list[Any]] = []
     for symb in symbols:
         check = False
         for symbol_data in FetchData.query_data:
@@ -337,10 +337,13 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
                 with open(FilePaths.settings_path/'settings.json') as f:
                     settings = json.load(f)
                 settings["query"] = current_query
-                if len(current_query["markets"]) > 1:
+                try:
+                    if len(current_query["markets"]) > 1:
+                        settings["market"] = "global"
+                    else:
+                        settings["market"] = current_query["markets"][0]
+                except KeyError:
                     settings["market"] = "global"
-                else:
-                    settings["market"] = current_query["markets"][0]
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
                 if QueryVars.my_query["columns"] == ['name']:
