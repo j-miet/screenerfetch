@@ -1,69 +1,7 @@
-"""Handles all query and custom header data.
+"""Handles all query and custom header data."""
 
-Query is used to fetch screener data from Tradingview API. API requests can be tracked through browser developer tools: 
-(F12) -> Network -> filter URL by 'scanner' and choose domain -> 'Request': JSON code updates as you change screener 
-settings and update page.
-
-You can create a query by writing it yourself, or just copy all the code from request page with
-right click -> Copy All.
-
-To setup your own query + save its contents in a workbook, use the command 'update query' in ui.
-
-Example
---- 
-
-market = 'america'
-
-my_query = {
-    "markets": ["america"],
-    "options": {"lang": "en"},
-    "columns": ["name",
-                "open",
-                "close",
-                "low",
-                "high", 
-                "change_from_open", 
-                "change", 
-                "volume",
-                "float_shares_outstanding_current", 
-                "market_cap_basic",
-                "premarket_open",
-                "premarket_close",
-                "premarket_change",
-                "premarket_volume" 
-                ],
-    "filter": [{"left" : "premarket_change", "operation" : "greater", "right" : 7},
-               {"left" : "premarket_volume", "operation" : "greater", "right" : 250000},
-               {"left" : "premarket_close", "operation" : "less", "right" : 20},
-               {"left" : "country", "operation" : "not_in_range", "right" : ["Aland Islands", "Anguilla",
-                "Azerbaijan", "Barbados", "Cambodia", "China", "Faroe Islands", "Gibraltar", "Hong Kong",
-                "Jamaica", "Kenya", "Macau", "Mauritius", "Montenegro", "Papua New Guinea",
-                "Russian Federation", "Thailand", "Vietnam"]},
-               {"left" : "typespecs", "operation" : "has", "right" : ["common"]},
-               {"left" : "exchange", "operation" : "in_range", "right" : ["AMEX", "NYSE", "NASDAQ"]}             
-               ],
-    "sort": {"sortBy": "premarket_change", "sortOrder": "desc"},
-    "range": [0, 75]
-}
-
-custom_headers = {
-    'A' : {'name': 'Date'},
-    'B' : {'name': 'Symbol'},
-    'C' : {'name': 'Open', 'type': 'float'},
-    'D' : {'name': 'Price', 'type': 'float'},
-    'E' : {'name': 'Low', 'type': 'float'},
-    'F' : {'name': 'High', 'type': 'float'},
-    'G' : {'name': 'Chg from Open %', 'type': 'float'},
-    'H' : {'name': 'Change %', 'type': 'float'},
-    'I' : {'name': 'Volume', 'type': 'int'},
-    'J' : {'name': 'Float', 'type': 'int'},
-    'K' : {'name': 'Market Cap', 'type': 'int'},
-	'L' : {'name': 'Pre-market Open', 'type': 'float'},
-    'M' : {'name': 'Pre-market Close', 'type': 'float'},
-    'N' : {'name': 'Pre-market Chg %', 'type': 'float'},
-    'O' : {'name': 'Pre-market Vol', 'type': 'int'}
-}
-"""
+# mypy: ignore-errors
+# query has lot of type hint errors because variables use these quite loosely. So that's why ignore flag is used.
 
 from __future__ import annotations
 import copy
