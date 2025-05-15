@@ -44,10 +44,10 @@ def execute_args_commands() -> None:
     
     run._initialize_workbook()
     if args.change_wb:
-        with open(FilePaths.settings_path/'settings.json') as f:
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
             settings = json.load(f)
-        settings["wb_name"] = args.change_wb
-        with open(FilePaths.settings_path/'settings.json', 'w') as f:
+        settings["wb_name"] = args.change_wb[0]
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
             json.dump(settings, f, indent=4)
         run._initialize_workbook()
         commands.update_wb_file_name(args.change_wb)
