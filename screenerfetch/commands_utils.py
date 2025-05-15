@@ -200,11 +200,11 @@ def select_saved_objects() -> tuple[bool, list[list[str]]]:
     with open(FilePaths.TXT_PATH) as file:
         lines = file.readlines()[4:]
     for elem in lines:
-        if '+' in elem:
+        if elem.lstrip().startswith('+'):
             start = elem.index('+')
             for pos in range(start, len(elem)-1):
                 if elem[pos+1] != ' ':
-                    symbol_end = elem[pos+1:10].index(' ')   # space for symbol names should never exceed 10 symbols.
+                    symbol_end = elem[pos+1:len(elem)].index(' ')
                     symbols.append(elem[pos+1: pos+1+symbol_end])
                     break
     check = False
@@ -343,6 +343,9 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
                     settings["market"] = current_query["markets"][0]
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
+                if QueryVars.my_query["columns"] == ['name']:
+                    workbook_tools.create_wb(False)
+                    QueryVars.update_query_variables()
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.') 
         case 'headers':
@@ -371,7 +374,7 @@ def delete_workbook(wb_name_to_del: str) -> int:
 
     Returns:
         int:
-        1 if no file was deleted; invalid name/doesn't exist. 0 if delete was succesful.
+        -1 if no file was deleted; invalid name/doesn't exist. 0 if delete was succesful.
     """
     logger.debug(f"commands_utils> delete_workbook: Called with name arg {wb_name_to_del}")
     if wb_name_to_del == '_default':
@@ -380,7 +383,11 @@ def delete_workbook(wb_name_to_del: str) -> int:
     elif wb_name_to_del.endswith(('.txt', '.json')):
         return -1
     elif wb_name_to_del in os.listdir(FilePaths.WB_FILES_ROOT_PATH):
-        shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/wb_name_to_del)
+        try:
+            shutil.rmtree(FilePaths.WB_FILES_ROOT_PATH/wb_name_to_del)
+        except PermissionError:
+            print("Unable to delete workbook: one or more of its files are in use.")
+            return -1
         print(f"Workbook '{wb_name_to_del}' contents deleted succesfully!")
         logger.debug("commands_utils> delete_workbook: Delete succesful'")
         return 0
