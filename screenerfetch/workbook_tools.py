@@ -159,7 +159,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
                     decimals = float_decimals[float_columns[f_col]]
                     ws[float_columns[f_col][0]+str(r)] = (
                         f"{float((ws.cell(row=r, column=xlsx_float_columns[f_col]).value)):.{decimals}f}") # type: ignore
-                except (TypeError, ValueError):
+                except (TypeError, ValueError, KeyError):
                     ...
             for i_col in range(len(int_columns)):
                 try:
