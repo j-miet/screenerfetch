@@ -215,10 +215,7 @@ def update_date_format() -> None:
             print('Input not recognized.')
 
 def update_to_nums() -> None:
-    """Updates values of all pre-selected columns to numerical types.
-    
-    To change selected columns, edit CUSTOM_HEADERS in query.py.
-    """
+    """Updates values of all pre-selected columns to numerical types."""
     logger.debug("commands.py> update_to_nums")
     verify = input('This process can possible overwrite important data - make sure you have copied'
                    'your current workbook.\n'
@@ -228,6 +225,11 @@ def update_to_nums() -> None:
         workbook_tools.update_values_to_nums()
     else:
         print('Updating halted.')
+
+def update_workbook_headers() -> None:
+    """Update xlsx file headers for currently selected workbook."""
+    logger.debug("commands.py> update_workbook_headers")
+    workbook_tools.update_headers()
 
 def export_wb() -> None:
     """Exports current workbook data and saves it in selected type."""
