@@ -36,10 +36,10 @@ def execute_args_commands() -> None:
                          help="save all fetched data in .xlsx file. Saving is possible only after "
                          "data has been fetched with -f/--fetch")
     parser.add_argument("-c", "--autocopy", action='store_true',
-                         help=f"makes/overwrites autocopy of current xlsx file. This won't override normal copy.")
+                         help="makes/overwrites autocopy of current xlsx file. This won't override normal copy.")
     parser.add_argument("--export", const='all', nargs='?', type=str,
                          help="export workbook data into specified data format: 'csv', 'txt', 'json'. "
-                         f"Default value 'all' creates all files inside workbook data folder")
+                         "Default value 'all' creates all files inside workbook data folder")
     args = parser.parse_args()
     
     run._initialize_workbook()
