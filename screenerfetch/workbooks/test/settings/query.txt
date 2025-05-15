@@ -1,17 +1,7 @@
 {
 	"columns": [
 		"name",
-		"description",
-		"logoid",
-		"update_mode",
-		"type",
-		"typespecs",
 		"open",
-		"pricescale",
-		"minmov",
-		"fractional",
-		"minmove2",
-		"currency",
 		"close",
 		"low",
 		"high",
@@ -20,12 +10,10 @@
 		"volume",
 		"float_shares_outstanding_current",
 		"market_cap_basic",
-		"fundamental_currency_code",
 		"premarket_open",
 		"premarket_close",
 		"premarket_change",
-		"premarket_volume",
-		"exchange"
+		"premarket_volume"
 	],
 	"filter": [
 		{
