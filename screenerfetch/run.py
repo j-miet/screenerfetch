@@ -19,7 +19,7 @@ import custom.small_cap1
 logger = logging.getLogger('screenerfetch')
 
 def _custom_create(wb_type: str) -> None:
-    """Creates workbook for given workbook type..
+    """Creates workbook for given workbook type.
     
     Args:
         wb_type (str): Workbook type.
@@ -39,9 +39,9 @@ def _select_custom_package() -> None:
         wb_type = json.load(f)["type"]
     if wb_type in os.listdir(FilePaths.PATH/'custom'):
         # add interface access command for any custom package here
-        if wb_type == 'small_cap1':
-            custom.small_cap1.c_commands.select_custom_command()
-        #
+        match wb_type:
+            case 'small_cap1':
+                custom.small_cap1.c_commands.select_custom_command()
         return
     print(f"Unsupported custom package type '{wb_type}'.")
 
@@ -116,6 +116,8 @@ def open_cli() -> None:
         "update nums => update all customly listed columns to numerical values - so don't use this on other than "
         "columns with numerical values!\n"
             "\t       Select different columns by modifying query.py CUSTOM_HEADERS.\n"
+        f"update headers => update header names in {FilePaths.wb_name}.xlsx. Custom names can be added using 'q'/"
+        "'update query' command.\n"
         f"remove duplicates => removes all duplicate rows from {FilePaths.wb_name}.xlsx. Duplicate rows are those with "
             "same data and symbol name.\n"
         "\t\t     Remove iterates in reverse, meaning higher row indices are removed and lowest stays untouched.\n"
@@ -185,12 +187,12 @@ def open_cli() -> None:
                 commands.update_date_format()
             case 'update nums':
                 commands.update_to_nums()
+            case 'update headers':
+                commands.update_workbook_headers()
             case 'remove duplicates':
                 commands.remove_duplicate_data()
             case 'copy':
                 commands.copy()
-            case 'UPDATE WB':
-                commands.create(False)
             case 'FORMAT WB':
                 _create_new_wb()
             case 'DELETE WB':
