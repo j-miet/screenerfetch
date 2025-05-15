@@ -366,6 +366,7 @@ def update_settings_json(query_input: str, manual_update: bool = True) -> None:
                 settings['headers'] = current_headers
                 with open(FilePaths.settings_path/'settings.json', 'w') as f:
                     json.dump(settings, f, indent=4)
+                QueryVars.update_query_variables()
             except json.decoder.JSONDecodeError:
                 print('Invalid json text given. Make sure all properties are enclosed in double quotes.')
 
