@@ -43,7 +43,8 @@ def test_get_column_header_data():
         {'A1': 'Date', 'B1': 'Symbol', 'C1': 'open', 'D1': 'close', 'E1': 'low', 'F1': 'High', 'G1': 'volume', 'H1': 
          'Float', 'I1': 'Market Cap'},
         ['D1', 'F1', 'G1', 'I1'],
-        ['C1']
+        ['C1'],
+        {'C1': 2}
     )
 
 def test_update_query_variables(mocker, file_paths, query_vars):
