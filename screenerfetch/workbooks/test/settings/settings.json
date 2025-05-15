@@ -10,27 +10,33 @@
         },
         "C": {
             "name": "Open",
-            "type": "float"
+            "type": "float",
+            "decimals": 3
         },
         "D": {
             "name": "Price",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "E": {
             "name": "Low",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "F": {
             "name": "High",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "G": {
             "name": "Chg from Open %",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "H": {
             "name": "Change %",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "I": {
             "name": "Volume",
@@ -46,15 +52,18 @@
         },
         "L": {
             "name": "Pre-market Open",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "M": {
             "name": "Pre-market Close",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "N": {
             "name": "Pre-market Chg %",
-            "type": "float"
+            "type": "float",
+            "decimals": 2
         },
         "O": {
             "name": "Pre-market Vol",
@@ -64,17 +73,7 @@
     "query": {
         "columns": [
             "name",
-            "description",
-            "logoid",
-            "update_mode",
-            "type",
-            "typespecs",
             "open",
-            "pricescale",
-            "minmov",
-            "fractional",
-            "minmove2",
-            "currency",
             "close",
             "low",
             "high",
@@ -83,12 +82,10 @@
             "volume",
             "float_shares_outstanding_current",
             "market_cap_basic",
-            "fundamental_currency_code",
             "premarket_open",
             "premarket_close",
             "premarket_change",
-            "premarket_volume",
-            "exchange"
+            "premarket_volume"
         ],
         "filter": [
             {

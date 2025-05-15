@@ -24,15 +24,15 @@ def test_get_date():
     else:
         assert commands_utils.get_date() == str(today.day)+'/0'+str(today.month)+'/'+str(today.year)
 
-@pytest.mark.parametrize("float_val, int_val", [
+@pytest.mark.parametrize("input, output", [
     (2.99, 2),
     (1.12345, 1),
     (5.1e6+0.1, 5100000),
     (0, 0),
-    (None, '-')
+    ('-', '-')
 ])
-def test_round_to_int(float_val: float, int_val: int):
-    assert commands_utils.round_to_int(float_val) == int_val
+def test_round_to_int(input, output):
+    assert commands_utils.round_to_int(input) == output
 
 def test_requests_api_data(mocker, query_vars):
     query_vars.url = ""
@@ -52,7 +52,7 @@ def test_requests_api_data(mocker, query_vars):
     "name", "open", "close", "low", "high", "volume", "float_shares_outstanding_current", "market_cap_basic"
 ])
 def test_clean_fetched_data(column: str, query_vars):
-    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(
+    query_vars.col_headers, _, _, _ = query_vars.get_column_header_data(
         helper_data.query_test["columns"],
         {}, 
         helper_data. header_chars_test)
@@ -62,14 +62,14 @@ def test_clean_fetched_data(column: str, query_vars):
     expected_df = pd.DataFrame(
         {
         "name": ['NFLX', 'ORCL', 'ANET', 'MRVL', 'NVDA'],
-        "open": ['863.53', '163.87', '121.56', '125.85', '139.16'],
-        "close": ['869.68', '172.57', '121.50', '123.78', '140.83'],
-        "low": ['854.75', '162.75', '119.50', '122.10', '137.09'],
-        "high": ['916.40', '173.37', '121.92', '126.11', '141.83'],
+        "open": [863.53, 163.87, 121.56, 125.85, 139.16],
+        "close": [869.68, 172.57, 121.5, 123.78, 140.83],
+        "low": [854.745, 162.75, 119.5001, 122.1, 137.09],
+        "high": [916.40, 173.37, 121.92, 126.11, 141.83],
         "volume": [9846543, 30228784, 6366606, 12770695, 197735798],
-        "float_shares_outstanding_current": ['424635922.28', '1644595698.24', '1032606375.60', '857983888.50', 
+        "float_shares_outstanding_current": [424635922.284, 1644595698.24, 1032606375.6000001, 857983888.5, 
                                              23513142880],
-        "market_cap_basic": ['371751783265.99', '482670726843.00', 153060781860, 107106831433, 3448926744843]
+        "market_cap_basic": [371751783265.99, 482670726842.99994, 153060781860, 107106831433, 3448926744843]
         })
     
     if column == 'name':
@@ -81,12 +81,15 @@ def test_clean_fetched_data(column: str, query_vars):
     "Symbol", "open", "close", "low", "High", "volume", "Float", "Market Cap"
 ])
 def test_clean_fetched_data_custom_headers(column: str, query_vars):
-    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(
-        helper_data.query_test["columns"],
-        helper_data.headers_test, 
-        helper_data. header_chars_test)
-    query_vars.txt_headers = [header for header in list(query_vars.col_headers)[1:]]
-    query_vars.int_cols = ['D1', 'F1', 'I1']
+    query_vars.col_headers, query_vars.int_cols, query_vars.float_cols, query_vars.float_decimals = (
+        query_vars.get_column_header_data(
+            helper_data.query_test["columns"],
+            helper_data.headers_test, 
+            helper_data.header_chars_test))
+    assert query_vars.txt_headers == [header for header in list(query_vars.col_headers)[1:]]
+    assert query_vars.int_cols == ['D1', 'F1', 'G1', 'I1']
+    assert query_vars.float_cols == ['C1']
+    assert query_vars.float_decimals == {"C1": 2}
 
     test_df = commands_utils.clean_fetched_data(helper_data.json_data_test)
     expected_df = pd.DataFrame(
@@ -94,11 +97,11 @@ def test_clean_fetched_data_custom_headers(column: str, query_vars):
         "Symbol": ['NFLX', 'ORCL', 'ANET', 'MRVL', 'NVDA'],
         "open": ['863.53', '163.87', '121.56', '125.85', '139.16'],
         "close": [869, 172, 121, 123, 140],
-        "low": ['854.75', '162.75', '119.50', '122.10', '137.09'],
+        "low": [854.75, 162.75, 119.50, 122.10, 137.09],
         "High": [916, 173, 121, 126, 141],
         "volume": [9846543, 30228784, 6366606, 12770695, 197735798],
-        "Float": ['424635922.28', '1644595698.24', '1032606375.60', '857983888.50', 23513142880],
-        "Market Cap": [371751783265, 482670726843, 153060781860, 107106831433, 3448926744843]
+        "Float": [424635922.28, 1644595698.24, 1032606375.60, 857983888.50, 23513142880],
+        "Market Cap": [371751783265, 482670726842, 153060781860, 107106831433, 3448926744843]
         })
 
     if column == 'Symbol':
@@ -115,10 +118,10 @@ def test_create_fetch_display_txt(mocker):
     assert mock_write.call_count == 2
 
 def test_create_screener_data(query_vars):
-    query_vars.col_headers, query_vars.int_cols, _ = query_vars.get_column_header_data(
+    query_vars.col_headers, _, _, _ = query_vars.get_column_header_data(
         helper_data.query_test["columns"],
         {}, 
-        helper_data. header_chars_test)
+        helper_data.header_chars_test)
     query_vars.txt_headers = [header for header in list(query_vars.col_headers)[1:]]
 
     test_df: pd.DataFrame = commands_utils.clean_fetched_data(helper_data.json_data_test)
@@ -139,9 +142,9 @@ def test_select_saved_object(mocker, fetch_data):
     mock_open.return_value.readlines.return_value = helper_data.select_query_data_to_save
 
     assert commands_utils.select_saved_objects() == (True, [
-        ['NFLX', '863.53', '869.68', '854.75', '916.40', 9846543, '424635922.28', '371751783265.99'],
-        ['ORCL', '163.87', '172.57', '162.75', '173.37', 30228784, '1644595698.24', '482670726843.00'],
-        ['NVDA', '139.16', '140.83', '137.09', '141.83', 197735798, 23513142880, 3448926744843]])
+        ['NFLX', '863.53', 869, 854.745, 916, 9846543, 424635922.284, 371751783265],
+        ['ORCL', '163.87', 172, 162.75, 173, 30228784, 1644595698.24, 482670726842],
+        ['NVDA', '139.16', 140, 137.09, 141, 197735798, 23513142880, 3448926744843]])
     
     mock_open.assert_called()
 

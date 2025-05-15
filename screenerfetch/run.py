@@ -19,7 +19,7 @@ import custom.small_cap1
 logger = logging.getLogger('screenerfetch')
 
 def _custom_create(wb_type: str) -> None:
-    """Creates workbook for given workbook type..
+    """Creates workbook for given workbook type.
     
     Args:
         wb_type (str): Workbook type.
@@ -39,9 +39,9 @@ def _select_custom_package() -> None:
         wb_type = json.load(f)["type"]
     if wb_type in os.listdir(FilePaths.PATH/'custom'):
         # add interface access command for any custom package here
-        if wb_type == 'small_cap1':
-            custom.small_cap1.c_commands.select_custom_command()
-        #
+        match wb_type:
+            case 'small_cap1':
+                custom.small_cap1.c_commands.select_custom_command()
         return
     print(f"Unsupported custom package type '{wb_type}'.")
 
@@ -116,6 +116,8 @@ def open_cli() -> None:
         "update nums => update all customly listed columns to numerical values - so don't use this on other than "
         "columns with numerical values!\n"
             "\t       Select different columns by modifying query.py CUSTOM_HEADERS.\n"
+        f"update headers => update header names in {FilePaths.wb_name}.xlsx. Custom names can be added using 'q'/"
+        "'update query' command.\n"
         f"remove duplicates => removes all duplicate rows from {FilePaths.wb_name}.xlsx. Duplicate rows are those with "
             "same data and symbol name.\n"
         "\t\t     Remove iterates in reverse, meaning higher row indices are removed and lowest stays untouched.\n"
@@ -127,8 +129,8 @@ def open_cli() -> None:
             "\t     Meant to be used for updating your xlsx headers values according to settings.json: call this "
             "command if you are creating\n"
             "\t     a new workbook and have already set all query stuff with 'update query'.\n"
-        f"FORMAT WB => format current workbook '{FilePaths.wb_name}' to any supported type, default being 'basic'. "
-            "All custom i.e. non-basic type workbooks support basic commands, though!\n"
+        f"FORMAT WB => format current workbook '{FilePaths.wb_name}' to any supported type, default being 'basic'.\n"
+            "\t\tAll custom i.e. non-basic type workbooks support basic commands, though!\n"
             "\t     This process will both overwrite any of your xlsx data (excluding copies) AND settings folder "
             "data!\n"
             "\t     Custom workbooks can access their custom commands, if they have been implemented, "
@@ -137,18 +139,19 @@ def open_cli() -> None:
             "workbook.")
     HELP_MESSAGE = ("-----------------------------------------------\n"
                     ">>>Quick guide on how to setup screenerfetch<<<\n"
-                    "-write all commands without quotations."
+                    "-write all commands without quotations.\n"
                     "-some commands have normal & short notation, both are fine.\n"
-                    "1. Create a new workbook (or use existing one) by typing 'cw'/'change wb'.\n"
+                    "1. Create a new workbook (or use existing one) by typing 'ww'/'change wb'.\n"
                     "2. type 'q'/'update query' and update these settings to your own liking.\n"
                     "3. after you've returned to main interface, type 'f'/'fetch' to get data based on your query.\n"
                     "Optionally, type 'txt'/'open txt' afterwards to check your query output - close this txt file "
                     "before proceeding to next step.\n"
                     "4. type either\n"
-                    " -'s'/'save', if you'd wish to safe only specific rows of data, or\n"
+                    " -'s'/'save', if you'd wish to safe only specific data rows, or\n"
                     " -'sa'/'saveall', if you'd like to save all data from query.\n"
                     "5. type 'e'/'excel' to open your .xlsx workbook file and check that everything was saved!\n"
-                    "6. close your workbook and optionally try other commands. Type 'exit' to leave program and to "
+                    "6. close your workbook and optionally try other commands.\n" 
+                    "   Type 'exit' to leave program and to "
                     "create an automatic copy of your workbook.\n"
                     "To make a separate manual copy, use 'copy' instead.")
     logger.debug("run> entering command loop\n"
@@ -184,12 +187,12 @@ def open_cli() -> None:
                 commands.update_date_format()
             case 'update nums':
                 commands.update_to_nums()
+            case 'update headers':
+                commands.update_workbook_headers()
             case 'remove duplicates':
                 commands.remove_duplicate_data()
             case 'copy':
                 commands.copy()
-            case 'UPDATE WB':
-                commands.create(False)
             case 'FORMAT WB':
                 _create_new_wb()
             case 'DELETE WB':

@@ -1,69 +1,7 @@
-"""Handles all query and custom header data.
+"""Handles all query and custom header data."""
 
-Query is used to fetch screener data from Tradingview API. API requests can be tracked through browser developer tools: 
-(F12) -> Network -> filter URL by 'scanner' and choose domain -> 'Request': JSON code updates as you change screener 
-settings and update page.
-
-You can create a query by writing it yourself, or just copy all the code from request page with
-right click -> Copy All.
-
-To setup your own query + save its contents in a workbook, use the command 'update query' in ui.
-
-Example
---- 
-
-market = 'america'
-
-my_query = {
-    "markets": ["america"],
-    "options": {"lang": "en"},
-    "columns": ["name",
-                "open",
-                "close",
-                "low",
-                "high", 
-                "change_from_open", 
-                "change", 
-                "volume",
-                "float_shares_outstanding_current", 
-                "market_cap_basic",
-                "premarket_open",
-                "premarket_close",
-                "premarket_change",
-                "premarket_volume" 
-                ],
-    "filter": [{"left" : "premarket_change", "operation" : "greater", "right" : 7},
-               {"left" : "premarket_volume", "operation" : "greater", "right" : 250000},
-               {"left" : "premarket_close", "operation" : "less", "right" : 20},
-               {"left" : "country", "operation" : "not_in_range", "right" : ["Aland Islands", "Anguilla",
-                "Azerbaijan", "Barbados", "Cambodia", "China", "Faroe Islands", "Gibraltar", "Hong Kong",
-                "Jamaica", "Kenya", "Macau", "Mauritius", "Montenegro", "Papua New Guinea",
-                "Russian Federation", "Thailand", "Vietnam"]},
-               {"left" : "typespecs", "operation" : "has", "right" : ["common"]},
-               {"left" : "exchange", "operation" : "in_range", "right" : ["AMEX", "NYSE", "NASDAQ"]}             
-               ],
-    "sort": {"sortBy": "premarket_change", "sortOrder": "desc"},
-    "range": [0, 75]
-}
-
-custom_headers = {
-    'A' : {'name': 'Date'},
-    'B' : {'name': 'Symbol'},
-    'C' : {'name': 'Open', 'type': 'float'},
-    'D' : {'name': 'Price', 'type': 'float'},
-    'E' : {'name': 'Low', 'type': 'float'},
-    'F' : {'name': 'High', 'type': 'float'},
-    'G' : {'name': 'Chg from Open %', 'type': 'float'},
-    'H' : {'name': 'Change %', 'type': 'float'},
-    'I' : {'name': 'Volume', 'type': 'int'},
-    'J' : {'name': 'Float', 'type': 'int'},
-    'K' : {'name': 'Market Cap', 'type': 'int'},
-	'L' : {'name': 'Pre-market Open', 'type': 'float'},
-    'M' : {'name': 'Pre-market Close', 'type': 'float'},
-    'N' : {'name': 'Pre-market Chg %', 'type': 'float'},
-    'O' : {'name': 'Pre-market Vol', 'type': 'int'}
-}
-"""
+# mypy: ignore-errors
+# query has lot of type hint errors because variables use these quite loosely. So that's why ignore flag is used.
 
 from __future__ import annotations
 import copy
@@ -115,6 +53,7 @@ class QueryVars:
     col_headers: dict[str, str]
     int_cols: list[str]
     float_cols: list[str]
+    float_decimals: dict[str, int]
 
     date_col: str
     txt_headers: list[str]
@@ -146,7 +85,7 @@ class QueryVars:
     def get_column_header_data(query_cols: list[str],
                                 custom_headers: dict[str, dict[str, Any]],
                                 header_chars: list[str]
-                                ) -> tuple[dict[str, str], list[str], list[str]]:
+                                ) -> tuple[dict[str, str], list[str], list[str], list[str]]:
         """Updates column values with custom names and lists all integer and float-valued columns.
 
         Args:
@@ -156,7 +95,8 @@ class QueryVars:
 
         Returns:
             tuple[dict[str,str],list[str],list[str]]:
-            a 3-tuple of column headers with their names, integer column headers, and float column headers.
+            a 3-tuple of column headers with their names, integer column headers, and float column headers, alongside 
+                their decimal counts.
         """
         logger.debug("query.py> QueryVars.get_column_header_data")
         init_column_headers = {char: name for char, name in zip(header_chars, ['date']+(query_cols))}
@@ -170,17 +110,19 @@ class QueryVars:
 
         int_columns = []
         float_columns = []
+        float_decimals = {}
         for char in custom_headers.keys():
             try:
                 if custom_headers[char]['type'] == 'int':
                     int_columns.append(char+'1')  
                 elif custom_headers[char]['type'] == 'float':
                     float_columns.append(char+'1')
-                else:
-                    ...
+                decimals = custom_headers[char]['decimals']
+                if decimals >= 0:
+                    float_decimals.update({char+'1': decimals})
             except (KeyError, TypeError):
                 ...
-        return column_headers, int_columns, float_columns
+        return column_headers, int_columns, float_columns, float_decimals
 
     @staticmethod
     def update_query_variables() -> None:
@@ -195,10 +137,11 @@ class QueryVars:
         QueryVars.wb_type = current_settings['type']
 
         QueryVars.header_chars = QueryVars.get_header_values()
-        QueryVars.col_headers, QueryVars.int_cols, QueryVars.float_cols  = QueryVars.get_column_header_data( 
-                                                                            QueryVars.my_query["columns"], 
-                                                                            QueryVars.custom_headers, 
-                                                                            QueryVars.header_chars)
+
+        QueryVars.col_headers, QueryVars.int_cols, QueryVars.float_cols, QueryVars.float_decimals = (
+                QueryVars.get_column_header_data(QueryVars.my_query["columns"], 
+                                                    QueryVars.custom_headers, 
+                                                    QueryVars.header_chars))
         QueryVars.date_col = [header[0] for header in QueryVars.col_headers.keys()][0]
         QueryVars.txt_headers = [header for header in list(QueryVars.col_headers)[1:]]
         QueryVars.sheet_xlsx_int_cols  = [ord(col_header[0].lower())-96 for col_header in QueryVars.int_cols]

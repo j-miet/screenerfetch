@@ -32,22 +32,22 @@ def execute_args_commands() -> None:
     parser.add_argument("-s", "--save", action='store_true',
                          help="opens api_data.txt where you can select which symbols to save in current xlsx file"
                          "Saving is possible only after data has been fetched with -f/--fetch")
-    parser.add_argument("-a", "--saveall", action='store_true',
+    parser.add_argument("-sa", "--saveall", action='store_true',
                          help="save all fetched data in .xlsx file. Saving is possible only after "
                          "data has been fetched with -f/--fetch")
     parser.add_argument("-c", "--autocopy", action='store_true',
-                         help=f"makes/overwrites autocopy of current xlsx file. This won't override normal copy.")
+                         help="makes/overwrites autocopy of current xlsx file. This won't override normal copy.")
     parser.add_argument("--export", const='all', nargs='?', type=str,
                          help="export workbook data into specified data format: 'csv', 'txt', 'json'. "
-                         f"Default value 'all' creates all files inside workbook data folder")
+                         "Default value 'all' creates all files inside workbook data folder")
     args = parser.parse_args()
     
     run._initialize_workbook()
     if args.change_wb:
-        with open(FilePaths.settings_path/'settings.json') as f:
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json') as f:
             settings = json.load(f)
-        settings["wb_name"] = args.change_wb
-        with open(FilePaths.settings_path/'settings.json', 'w') as f:
+        settings["wb_name"] = args.change_wb[0]
+        with open(FilePaths.WB_FILES_ROOT_PATH/'current_wb.json', 'w') as f:
             json.dump(settings, f, indent=4)
         run._initialize_workbook()
         commands.update_wb_file_name(args.change_wb)

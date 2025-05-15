@@ -120,7 +120,7 @@ def test_create_workbook():
     test_wb_sheet = test_wb["sheet1"]
     assert test_wb_sheet["A1"].value == 'date'
     assert test_wb_sheet["B1"].value == 'name'
-    assert test_wb_sheet["C1"].value == None
+    assert test_wb_sheet["C1"].value == 'open'
     assert test_wb_sheet["A2"].value == None
     assert test_wb_sheet["B2"].value == None
     commands.saveall()  # save data
@@ -128,7 +128,7 @@ def test_create_workbook():
     test_wb_sheet = test_wb["sheet1"]
     assert len(test_wb_sheet["A"]) == 1 + len(FetchData.query_data) # column + all data rows
     assert len(test_wb_sheet["B"]) == 1 + len(FetchData.query_data)
-    assert test_wb_sheet["C1"].value == None # no headers because only default headers exist
+    assert test_wb_sheet["C1"].value == 'open'
     assert len(test_wb_sheet["C"]) == 1 + len(FetchData.query_data) # data still stored under column C
 
     # format workbook data, but don't delete settings files; simulates 'UPDATE WB' commands.

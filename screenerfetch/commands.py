@@ -33,7 +33,8 @@ def update_query() -> None:
         '-You have your query in clipboard so click back to this program, type "query" and press Enter\n'
         '-A text file pops up: it contains your current query - if it\'s empty, paste the one you just copied.\n'
         '>Your query columns under "columns" will likely include some extra entries. For example, minimal \n'
-        'column list which you get with just including "name" (which by the way, must be included or you\'re in ' 'trouble) becomes\n\n'
+        'column list which you get with just including "name" (which by the way, must be included or you\'re in ' 
+        'trouble) becomes\n\n'
 
         '[\n'
         '   "name",\n'
@@ -45,16 +46,7 @@ def update_query() -> None:
         '   "exchange"\n'
         ']\n\n'
         'To find out what these columns do, you can always save the query, return to main commands, fetch data and '
-        'check the fetched data with \'txt\' command.\n' 
-        '.\n.\n.\n'
-        '-the other thing you need is market value: this determines the region(s) where your query searches data.\nTo'
-        ' find it, open your previous query/query.txt and find the "markets" section.\n' 
-        ' If you use only a single region, say "uk", then there should only be that string - this is your market '
-        ' value. However, if you have multiple regions e.g. "america, canada, germany",\n'
-        ' then you must use "global" instead.'
-        '-click back to program, type "market" and write your market value, then press Enter. Make sure there are no '
-        ' typos!\n'
-
+        'check the fetched data with \'txt\' command.\n\n' 
         '---This is everything you need...but if you wish to customize your column names for txt/excel files, check '
         'this out:----\n\n'
 
@@ -62,24 +54,26 @@ def update_query() -> None:
         '"A" : {"name": "Date"},\n'
         '"B" : {"name": "Symbol"},\n'
         '"C" : {"type": "float"},\n'
-        '"D" : {"name": "Price", "type": "float"},\n'
+        '"D" : {"name": "Price", "type": "float", "decimals": 2},\n'
         '"F" : {"name": "Volume", "type": "int"},\n'
         '}\n\n'
         'letters refer to corresponding workbook columns, name is the column name and type is the column value type.\n'
         'Supported type values are "int" or "float": these ensure that numbers are either rounded down to an '
-        'integer, or are rounded to 2 decimals points. These also ensure excel doesn\'t complain about using string '
+        'integer, or are rounded to desired amount of decimals.\n'
+        'To customize decimals of float number, include the "decimals": N, where N is the amount of decimals.\n\n'
+        'These int/float values also ensure excel doesn\'t complain about using string '
         'value with numbers in xlsx files.\n'
-        'Neither of the name/type values are necessary so you can have name, but not type and vice versa.\n'
+        'name/type values are optional so you can have name, but not type and vice versa.\n'
+        'However, use "decimals" only with float values (they would not make sense for ints or other types...)\n'
         'And if you want to leave default name values and don\'t care about rounding, remove the entire row!\n'
-        '#Note that date column is always A; rest depend on the order they appear in query columns.'
-        '#supports excel columns A-Z and AA-AZ; if your workbook exceeds this limit of 52 names, program crashes.')
+        '# Note that date column is always A; rest depend on the order they appear in query columns.\n'
+        '# Supports excel columns A-Z and AA-AZ; if your workbook exceeds this limit of 52 column names, '
+        'program crashes.')
     QUERY_COMMANDS_HELP = (
             '/////////////////////////////\n'
             'Query commands:\n'
-            'query => current query; must be in JSON format. NOTE that order in \'columns\' matters: Nth value will '
-            'be N+1 column in .xlsx file (because first column is always date value).\n'
-            'market => markets where query data is searched in - either a country/region name or \'global\' if '
-            'multiple.\n'
+            'query => current query; must be in JSON format. NOTE that order in \'columns\' matters:\n'
+            '\t Nth value will be N+1 column in .xlsx file (because first column is always date value).\n'
             'headers => custom header values, useful if you want to save data in excel; must be in JSON format.\n'
             'OTHER: \'help\' for detailed info, or \'back\' to return to main ui.')
     print(QUERY_COMMANDS_HELP)
@@ -221,10 +215,7 @@ def update_date_format() -> None:
             print('Input not recognized.')
 
 def update_to_nums() -> None:
-    """Updates values of all pre-selected columns to numerical types.
-    
-    To change selected columns, edit CUSTOM_HEADERS in query.py.
-    """
+    """Updates values of all pre-selected columns to numerical types."""
     logger.debug("commands.py> update_to_nums")
     verify = input('This process can possible overwrite important data - make sure you have copied'
                    'your current workbook.\n'
@@ -234,6 +225,11 @@ def update_to_nums() -> None:
         workbook_tools.update_values_to_nums()
     else:
         print('Updating halted.')
+
+def update_workbook_headers() -> None:
+    """Update xlsx file headers for currently selected workbook."""
+    logger.debug("commands.py> update_workbook_headers")
+    workbook_tools.update_headers()
 
 def export_wb() -> None:
     """Exports current workbook data and saves it in selected type."""

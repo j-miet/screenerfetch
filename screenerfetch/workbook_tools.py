@@ -147,6 +147,7 @@ def update_values_to_nums(start_row: int = 2) -> None:
     int_columns = QueryVars.int_cols
     xlsx_int_columns = QueryVars.sheet_xlsx_int_cols
     float_columns = QueryVars.float_cols
+    float_decimals = QueryVars.float_decimals
     xlsx_float_columns = QueryVars.sheet_xlsx_float_cols
 
     wb = openpyxl.load_workbook(FilePaths.wb_path)
@@ -155,12 +156,14 @@ def update_values_to_nums(start_row: int = 2) -> None:
         for r in range(start_row, get_last_row(WorkbookSheets.sheet_names[0])+1):
             for f_col in range(len(float_columns)):
                 try:
+                    decimals = float_decimals[float_columns[f_col]]
                     ws[float_columns[f_col][0]+str(r)] = (
-                        f"{float((ws.cell(row=r, column=xlsx_float_columns[f_col]).value)):.2f}") # type: ignore
-                except (TypeError, ValueError):
+                        f"{float((ws.cell(row=r, column=xlsx_float_columns[f_col]).value)):.{decimals}f}") # type: ignore
+                except (TypeError, ValueError, KeyError):
                     ...
             for i_col in range(len(int_columns)):
                 try:
+                    ws[int_columns[i_col][0]+str(r)].number_format = '0'
                     ws[int_columns[i_col][0]+str(r)] = (
                         int(ws.cell(row=r, column=xlsx_int_columns[i_col]).value)) # type: ignore
                 except (TypeError, ValueError):
@@ -197,6 +200,23 @@ def update_datetime(first_row: int = 2) -> None:
             print('Date format updated.')
             return
     print('Argument must be an integer value greater than or equal to 2 (>= 2).')
+
+def update_headers() -> None:
+    """Update xlsx workbook file header columns."""
+    logger.debug("workbook_tools> update_headers: Updating workbook headers")
+    wb = openpyxl.load_workbook(FilePaths.wb_path)
+    ws = wb[WorkbookSheets.sheet_names[0]]
+    if ws is not None:
+        header_font = Font(name='Times New Roman', size=12, bold=True)
+        for h in QueryVars.col_headers.keys():
+            ws[h] = QueryVars.col_headers[h]
+            ws[h].font = header_font
+        for i in range(2, len(QueryVars.col_headers.keys())+1):
+            current = ws.cell(column=i, row=1)
+            current.alignment = Alignment(horizontal='right')
+        wb.save(FilePaths.wb_path)
+        print("Xlsx file headers updated.")
+    return
 
 def export_wb(type: str) -> None:
     """Exports workbook data to specific format'.
@@ -276,10 +296,10 @@ def create_wb(new_files: bool = True) -> None:
     if ws_data is not None:
         ws_data.title = "sheet1"
         header_font = Font(name='Times New Roman', size=12, bold=True)
-        for h in QueryVars.col_headers:
+        for h in QueryVars.col_headers.keys():
             ws_data[h] = QueryVars.col_headers[h]
             ws_data[h].font = header_font
-        for i in range(2, len(QueryVars.col_headers)+1):
+        for i in range(2, len(QueryVars.col_headers.keys())+1):
             current = ws_data.cell(column=i, row=1)
             current.alignment = Alignment(horizontal='right')
         # before a style can be used, it has to be allocated to any cell. After this, any future cells can simply 
@@ -287,6 +307,6 @@ def create_wb(new_files: bool = True) -> None:
         ws_data['A2'].style = NamedStyle(name="datetime", number_format='YYYY/MM/DD')
         ws_data.freeze_panes = 'A2'
         wb.save(FilePaths.wb_path)
-
-        print(f"New workbook {FilePaths.wb_name}.xlsx created.")
+        if new_files:
+            print(f"New workbook {FilePaths.wb_name}.xlsx created.")
         WorkbookSheets.update_sheets()

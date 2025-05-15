@@ -123,8 +123,8 @@ def select_custom_command() -> None:
             f"{WorkbookSheets.sheet_names[1]}; has custom columns.\n"
             "notes = adds/overwrites notes for any listed symbol in "
             f"{WorkbookSheets.sheet_names[1]} sheet.\n"
-            f"images = add hyperlinks in {WorkbookSheets.sheet_names[1]} sheet which point "
-                "to 'custom/images' folder.\n"
+            f"images = add hyperlinks in {WorkbookSheets.sheet_names[1]} sheet which points "
+                "to 'small_cap1/images' folder.\n"
             "plot = commands for visualizing symbol data of current workbook.\n"
             "FORMAT WB = formats current workbook to custom format.\n"
             "[custom]>>>")
