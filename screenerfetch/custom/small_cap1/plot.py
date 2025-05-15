@@ -42,9 +42,10 @@ def show_daily_average_candles() -> None:
     df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Date', 'Low', 'High', 'Price', 'Open'])
     # read_excel orders columns based on their sheet order: currently, columns are ordered Open < Price < Low < High. 
     # So line below re-arranges columns to a order that aligns with the rest of code: Low < High < Price < Open.
-    df = df[['Date', 'Low', 'High', 'Price', 'Open']] 
+    df = df[['Date', 'Low', 'High', 'Price', 'Open']]
     df['Date'] = df['Date'].apply(lambda x: str(x).replace(' 00:00:00', '')) # normalize datetime object values.
     dates = df['Date'].unique()
+    df[['Low','High','Price','Open']] = df[['Low','High','Price','Open']].apply(pd.to_numeric, errors='coerce')
     # sets a minimum height for candle bodies, especially helpful if Open=Price; naturally skews the actual values a 
     #bit, but helps with visual clarity.
     try:
@@ -58,7 +59,8 @@ def show_daily_average_candles() -> None:
     ax_counts = fig.add_subplot(3, 1, 3)
     AverageCandles = namedtuple('AverageCandles', ['low', 'high', 'price', 'open'])
     for d in dates:
-        avg_list = list(df.loc[df['Date'] == d].mean(axis=0, numeric_only=True).values)
+        temp_df: pd.DataFrame = df.loc[df['Date'] == d]
+        avg_list = list(temp_df.mean(axis=0, numeric_only=True).values)
         for index in range(len(avg_list)):
             avg_list[index] = round(float(avg_list[index]), 2)
         
@@ -114,12 +116,14 @@ def show_average_lines() -> None:
     open_avg = []
     close_avg = []
 
-    df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Date', 'Pre-market Open', 'Open', 
-                                                                'Price'])
+    df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Date', 'Pre-market Open', 'Open', 'Price'])
+    df = df[['Date', 'Pre-market Open', 'Open', 'Price']]
     df['Date'] = df['Date'].apply(lambda x: str(x).replace(' 00:00:00', ''))
     dates = df['Date'].unique()
-    for val in dates:
-        temp_df: pd.DataFrame = df.loc[df['Date'] == val]
+    df[['Pre-market Open','Open','Price']] = df[['Pre-market Open','Open','Price']].apply(pd.to_numeric, 
+                                                                                          errors='coerce')
+    for d in dates:
+        temp_df: pd.DataFrame = df.loc[df['Date'] == d]
         avg_list = list(temp_df.mean(axis=0, numeric_only=True).values)
         for index in range(len(avg_list)):
             avg_list[index] = round(float(avg_list[index]), 2)
@@ -129,9 +133,9 @@ def show_average_lines() -> None:
 
     plt.gca().xaxis.set_major_locator(plt.MaxNLocator(steps=[2,3,4]))
     plt.title('Averages of pre-market open, open and close')
-    plt.plot(dates, pre_open_avg, 'o--', color='lightsteelblue', label='pre-open')
+    plt.plot(dates, pre_open_avg, 'x--', color='lightsteelblue', label='pre-open')
     plt.plot(dates, open_avg, 'o--', color='dodgerblue', label='open')
-    plt.plot(dates, close_avg, 'o--', color='goldenrod', label='close')
+    plt.plot(dates, close_avg, '+--', color='goldenrod', label='close')
     plt.legend()
     plt.show()
 
@@ -151,9 +155,12 @@ def show_daily_candles(date: str) -> None:
 
     df = pd.read_excel(FilePaths.wb_path, 0, header=0, usecols=['Date', 'Symbol', 'Open', 'Low', 'High', 'Price', 
                                                                 'Volume'])
+    df = df[['Date', 'Symbol', 'Open', 'Low', 'High', 'Price', 'Volume']]
     df['Date'] = df['Date'].apply(lambda x: str(x).replace(' 00:00:00', ''))
     df = df.loc[df['Date'] == date]
     df = df.reset_index(drop=True)
+    df[['Open', 'Low', 'High', 'Price']] = df[['Open', 'Low', 'High', 'Price']].apply(pd.to_numeric, 
+                                                                                      errors='coerce')
    
     delta = 0.001*df['High'].max(numeric_only=True)
 
