@@ -1,8 +1,9 @@
 ## Introduction
 
-``screenerfetch`` is a Python-based tool for fetching TradingView screener data and saving it neatly in xlsx workbook
+``screenerfetch`` is a Python-based tool for fetching TradingView screener data and saving it neatly in xlsx workbook 
 file.  
-It supports custom queries: you create a custom screener on TradingView website, then simply copy and paste the json request query into this program.
+It supports custom queries: you create a custom screener on TradingView website, then simply copy and paste the json 
+request query into this program.
 
 Data is fetched from TradingView's own web API, and is therefore accurate and accessable by anyone.
 
@@ -31,19 +32,20 @@ Data is fetched from TradingView's own web API, and is therefore accurate and ac
 
 ## Features
 
-- **Operates on a easy-to-use command line interface**, with plenty of available commands.
+- **Operates on an easy-to-use command line interface**, with plenty of available commands.
 
     - Support for writing basic scripts (get data, save it etc.) is also provided.
 
-- **Uses ``xlsx`` file format (also known as *excel workbook*) to store all data.**
+- **Uses ``xlsx`` files, also known as *excel workbooks*, to store all data.**
     
     - Fetch symbol data and preview it before saving. Select which entries to save, or save all of it.
     - Back up your data: uses both automatic and manual system where autocopy is updated each time you close the 
     program, manual copy only when you need one
     - Export your workbooks in ``txt``, ``csv`` and ``json`` formats
-    - Remove any duplicates entries if you accidentally fetch same data multiple times
+
 - **Custom queries**: copy your screener settings from TradingView website and simply paste them in a text file to get 
 exact same data from API. Data for **Stocks, ETFs, bonds, crypto**, should all be accessable.
+
 - **Custom headers**: use default headers in xlsx files or override them with custom names. Can also customize rounding 
 of numerical values for each data column individually e.g. have integers for float/market cap, but round prices to 
 decimal count of your choice.
@@ -69,17 +71,16 @@ working directory to ``<your path>/screenerfetch``.
 
 To run ``screenerfetch``, you either
 
-- run it without any arguments: this opens the full cli program
+- run it without any arguments: this opens the full cli program. Use this to create new workbooks, update workbook 
+settings with your own query and header values, test fetching and saving. You can also test plenty of other commands 
+provided.
 - pass it arguments, which runs it in scripting mode: it simply runs the corresponding command for each provided 
 argument, then closes.
 
 You can use the provided batch files ``run.bat`` and ``run-args.bat``, or just run commands in terminal. Below, batch 
 files are assumed to be used.
 
-- ``run`` starts ``screenerfetch`` without arguments, therefore running the <u>full CLI supported program</u>. Use this 
-to create new workbooks, update workbook settings with your own query and header values, test fetching and saving. You 
-can also test plenty of other commands provided.
-
+[<u>Scripting</u>]
 - To make simple scripts, use ``run-args``. Requires existing workbook. 
 **Remember to edit this file and customize the arguments for your own needs**. Following args are currently available:
 
@@ -97,7 +98,7 @@ can also test plenty of other commands provided.
     **Note that args have a specific order:** -wb -> -f -> -s -> -sa -> -c -> --export. This means that even if you 
     wrote ``test_wb -s -c -f``, it performs fetching, then saving, then copying.  
 
-    **<u>Full example</u>**: ``py screenerfetch -wb test_wb -f -sa -c --export``
+    **Full example**: ``py screenerfetch -wb test_wb -f -sa -c --export``
     
     - changes workbook to ``test_wb``; this is located in ``screenerfetch/workbooks/test_wb`` directory
     - fetches data
@@ -105,11 +106,13 @@ can also test plenty of other commands provided.
     - creates/overrides existing ``test_wb-autocopy.xlsx``
     - exports workbook data in all supported file types: these are created under ``data`` folder of current workbook.
 
-    <u>Logging</u>
+    **Logging**:
     For logging, you can use special argument ``-log``. Unlike other arguments, using ``py screenerfetch -log`` runs the
-     full cli program with logging enabled. But adding any script args will run it as script instead e.g 
-     ``py screenerfetch -log -wb test_wb``
+     full cli program with logging enabled. But adding any scripting args e.g 
+     ``py screenerfetch -log -wb test_wb``, will run it as script instead.
 
+
+[<u>Full program</u>]
 
 Using ``run.bat`` or typing ``py screenerfetch`` if you use command line, should display the following.
 
@@ -119,10 +122,10 @@ This is the default view after opening. It displays
 
 - current ui location (``main``) 
 - current workbook (``test``)
-- type of workbook (``small_cap1``)
+- type of current workbook (``small_cap1``)
 
     - ``small_cap1`` is built-in custom template. Normal workbook type is ``basic``. Custom templates are discussed 
-    later in last section.
+    later.
 
 Typing ``help`` displays the short setup guide whereas ``commands`` displays all supported commands.
 
@@ -164,11 +167,11 @@ program, or
 2. Write the screener query manually. But again, you need to know what to write in query so this pretty much
 comes back to point 1.
 
-Thus section covers only the point 1.
+Thus this section covers only the 1. point
 
 ---
 
-To begin, open your TradingView screener. These have a address with url  
+To begin, open your TradingView screener. These have an address with url  
 ``https://www.tradingview.com/screener/<identifier>/``  
 where ``<identifier>`` is a string of numbers and letters. You don&#39;t need to paste this url anywhere; this part
 is just to confirm you are on right screen.
@@ -183,18 +186,18 @@ Then, to access the json query of your current screener, do the following steps:
 
 2. below the headers, you see a searchbar with text ``Filter URLs``. Click on it and type ``scanner``.
 3. refresh your web page (press ``F5``). The filter bar should still display ``scanner``. If not, type it there again.
-4. now, you should see a result similar to this
+4. now you should see a similar output as below
 
     ![](docs/images/devtools_scanner.png)
 
     Here, **select the one with** 
     - *Method*: ``POST``
-    - *File*: ``scan?label-product=...``.
+    - *File*: ``scan?label-product=...``
 
     It should typically be the top one. The part after ``=`` changes depending on which screener you use. Here, 
     it&#39;s a stock screener and thus says ``scan?label-product=screener-stock``. 
 
-5. A page to the right opens. Select ``Request``. This opens a page with JSON data.
+5. A page to the right opens. Select ``Request``. This opens a page with JSON request data.
 
     ![](docs/images/devtools_json.png)
 
@@ -312,12 +315,12 @@ set it as default program to do so)
 
 ![](docs/images/excel_open.png)
 
-When data is stored first time, column are not automatically expanded. Simply double-click the vertical line between
-column letters to expand each.
+When data is stored the first time, columns are not automatically expanded. Simply double-click the vertical line 
+between column letters to expand each.
 
 ![](docs/images/excel_expanded.png)
 
-Here we can see that same 10 symbols of 100 are included (rows 2-11)
+Here we can see that same 10 symbols out of 100 are included (rows 2-11)
 
 ![](docs/images/excel_end.png)
 
@@ -454,8 +457,8 @@ To update existing workbook data, you can use following 3 commands:
 column to its corresponding type (int, float) + possibly rounds decimal values.
 - ``update date``: updates date display format to default value 'yyyy/mm/dd' if for some reason this has changed.
 
-If you have a brand new workbook with no data, you are likely to need only ``update headers``. Then afterwards, if 
-numerical or date data displays weirdly, use the other 2.
+If you have a brand new workbook with no data, you need to only ``update headers``. Then afterwards, if 
+numerical or date data displays weirdly, use the other two.
 
 ``new_wb.xlsx`` before customized ``headers.txt``
 
@@ -467,10 +470,8 @@ and after customization
 
 As you can see, float values follow more traditional rounding rules (well, negative numbers round exactly the same as 
 positives, though).
-But integers are always rounded towards floor value - be aware of this so you don&#39;t end up losing any valuable 
+But integers are always rounded towards floor value - be aware of this so you don&#39;t end up losing valuable 
 information the decimal points might convey.
-
-
 
 
 ## Workbook types
@@ -497,7 +498,7 @@ After typing ``small_cap1``, wb type is now updated.
 
 ![](docs/images/customize/workbook_smallcap1.png)
 
-Also, query and headers data is updated with custom values.
+Query and headers data are also updated with custom values.
 
 ![](docs/images/customize/query_smallcap1.png)
 
@@ -553,27 +554,27 @@ Now, your new workbook type should be avaiable under ``FORMAT WB`` command + you
 ### Example: small_cap1
 
 Screenerfetch comes with a workbook called ``test``. This uses the ``small_cap1`` type and some excel data included. As 
-name suggests, its symbols consist (mostly) of small cap stocks. To access custom commands, type ``custom``.
+name suggests, its symbols consist of small cap stocks. To access custom commands, type ``custom``.
 
 ![](docs/images/customize/custom_ui.png)
 
 This workbook type uses a second worksheet in excel workbooks where you can add data rows, notes and images 
-(which must be located in 'small_cap1/images' folder).
+(which must be located in ``small_cap1/images`` folder).
 
 Notably, it has built-in data plotting commands which can accessed with ``plot``.
 
 ![](docs/images/customize/custom_plot.png)
 
 5 different commands can be accessed, each displaying a data plot. Using ``avg daily`` displays average daily candles of
- each day on top graph, and total symbol count of each day as a line graph on bottom
+ each day on top graph, and total symbol count of each day as a line graph on bottom,
 
 ![](docs/images/customize/custom_plot_avgdaily.png)
-s
+
 and ``daily cs`` displays saved candlestick data for given date:
 
 ![](docs/images/customize/custom_plot_dailycsinput.png)
 
-opens the following figure.
+Inserting a date value opens a figure:
 
 ![](docs/images/customize/custom_plot_dailycs.png)
 
